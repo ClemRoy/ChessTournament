@@ -101,11 +101,11 @@ class Match():
         elif self.match_status == "Finished":
             display += ("Le match est terminé \n")
             if self.first_player_result == "Victory":
-                display += f"Victoire de {self.first_player.give_full_name()}"
+                display += f"Victoire de {self.first_player.give_full_name()}\n"
             elif self.first_player_result == "Defeat":
-                display += f"Victoire de {self.second_player.give_full_name()}"
+                display += f"Victoire de {self.second_player.give_full_name()}\n"
             elif self.first_player_result == "Draw":
-                display += "Match nul"            
+                display += "Match nul\n"            
         return display
 
     

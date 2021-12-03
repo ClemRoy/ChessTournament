@@ -16,39 +16,54 @@ class Playerlist(Base):
             serialized_player_list[i] = self.playerlist[i].serialize()
         return serialized_player_list
 
-
     def printlist(self):
         """Display the list in it's current order"""
         print('Liste des Joueurs')
         for player in self.playerlist:
             player.__str__()
 
-    def sortplayerlist(self):
+    def sort_playerlist_by_rank(self):
         """Sort the list from the weakest to the strongest rank"""
-        self.playerlist = sorted(self.playerlist, key=lambda player: player.rank)
+        new_player_list = self.playerlist
+        new_player_list.sort(key=lambda player: player.rank)
+        return new_player_list
+        
 
-    def find_player_list_middle(self):
+    def sort_playerlist_by_score_and_rank(self):
+        new_player_list = self.playerlist
+        new_player_list.sort(key=lambda player: (player.tournament_score, player.rank))
+        return new_player_list
+
+    def find_player_list_middle(self,list):
         """find the middle of the player list"""
-        lenth = len(self.playerlist)
+        lenth = len(list)
         middle_index = lenth // 2
         return middle_index
 
     def get_weakest_half(self):
         """Give a player list made of the weakest part of this player list"""
-        self.sortplayerlist()
-        self.weakest_half = self.playerlist[:self.find_player_list_middle()]
-        return Playerlist(self.weakest_half)
+        sorted_playerlist = self.sort_playerlist_by_rank()
+        weakest_half = sorted_playerlist[:self.find_player_list_middle(sorted_playerlist)]
+        return weakest_half
 
     def get_strongest_half(self):
         """Give a player list made of the strongest part of this player list"""
-        self.sortplayerlist()
-        self.strongest_half = self.playerlist[self.find_player_list_middle():]
-        return Playerlist(self.strongest_half)
+        sorted_playerlist = self.sort_playerlist_by_rank()
+        strongest_half = sorted_playerlist[self.find_player_list_middle(sorted_playerlist):]
+        return strongest_half
+
+    def get_player_list_score(self):
+        """Display the list of tournament player by tournament score"""
+        sorted_by_tourn_score = sorted(self.playerlist, key=lambda player: player.tournament_score)
+        liste = "Liste des joueurs par index du tournois: \n"
+        for player in sorted_by_tourn_score:
+            liste += "\n" + str(player) + "\n"
+        return liste
 
     def get_player_list(self):
         """Display the list of tournament player by tournament index"""
         sorted_by_tourn_index = sorted(self.playerlist, key=lambda player: player.tournament_player_index)
-        liste = "Liste des joueurs: \n"
+        liste = "Liste des joueurs par index du tournois: \n"
         for player in sorted_by_tourn_index:
             liste += "\n" + str(player) + "\n"
         return liste

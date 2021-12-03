@@ -122,31 +122,35 @@ class Views():
     def tournament_status(self, list_of_rounds):
         for round_number in range(len(list_of_rounds)):
             if list_of_rounds[round_number].status == "Ungenerated":
+                print(f"Round n°{round_number+1}")
                 print(f"Les pairs du round n°{round_number+1} n'ont pas été générée\n")
                 break
             elif list_of_rounds[round_number].status == "Generated":
+                print(f"Round n°{round_number+1}")
                 print(f"Les pairs du round n°{round_number} ont été générée mais le round n'a pas commencé\n"
                 "Voici la liste des matchs:\n")
                 self.display_round_match_list(list_of_rounds[round_number])
             elif list_of_rounds[round_number].status == "Started":
+                print(f"Round n°{round_number+1}")
                 self.round_chronometer_display(list_of_rounds[round_number])
                 print("Voici la liste des matchs:\n")
                 self.display_round_match_list(list_of_rounds[round_number])
             elif list_of_rounds[round_number].status == "Finished":
+                print(f"Round n°{round_number+1}")
                 self.round_chronometer_display(list_of_rounds[round_number])
                 print("Voici la liste des matchs:\n")
                 self.display_round_match_list(list_of_rounds[round_number])
 
     def round_chronometer_display(self, round):
         if round.status == "Unplayed":
-            print("Le round n'a pas débuté")
+            print("Le round n'a pas débuté\n")
         elif round.status == "Started":
             current_time = time.time()
             elapsed_time_min = (timedelta(seconds=current_time - round.start_time)) 
             print(f"Le round a débuté il y a {elapsed_time_min} secondes\n")
         elif round.status == "Finished":
             elapsed_time_min = (timedelta(seconds=round.end_time - round.start_time)) 
-            print(f"Le round est fini et a duré {elapsed_time_min} secondes")
+            print(f"Le round est fini et a duré {elapsed_time_min} secondes\n")
 
     def start_round_confirmation(self):
         print("Vous allez lancer le round,souhaitez vous confirmer? \n"
@@ -159,21 +163,32 @@ class Views():
         "pressez Y pour Oui,N pour non\n")
 
     def error_start_no_match_list(self):
-        print("Vous ne pouvez pas démarrer ce round parce que les matchs n'ont pas encore été générés")
+        print("Vous ne pouvez pas démarrer ce round parce que les matchs n'ont pas encore été générés\n")
 
     def error_start_already_started(self):
-        print("Vous ne pouvez pas démarrer ce round parce qu'il a déjà débuté")
+        print("Vous ne pouvez pas démarrer ce round parce qu'il a déjà débuté\n")
 
     def error_start_already_finished(self):
-        print("Vous ne pouvez pas démarrer ce round parce qu'il est déjà fini")
+        print("Vous ne pouvez pas démarrer ce round parce qu'il est déjà fini\n")
 
     def error_end_not_started(self):
-        print("Vous ne pouvez pas finir ce round parce qu'il n'a pas débuté")
+        print("Vous ne pouvez pas finir ce round parce qu'il n'a pas débuté\n")
 
     def error_end_already_ended(self):
-        print("Vous ne pouvez pas finir ce round parce qu'il est déjà fini")
+        print("Vous ne pouvez pas finir ce round parce qu'il est déjà fini\n")
+
+    def tournament_is_over(self,tournament_index):
+        print(f"Le tournois est terminé,il a été sauvegardé a l'index {tournament_index} dans la base de donnée des tournois fini.")
 
     ###Tournament related input###
+
+    def player_list_display_choice(self):
+        prompt = ("Veuillez choisir la méthode de tri de la liste des joueurs:\n"
+        "1.Afficher par index du tournois\n"
+        "2.Afficher par score du tournois\n")
+        result = input(prompt)
+        return result
+
 
     def match_result_prompt(self,match):
         prompt = ("Rentrez le chiffre suivant en fonction du resultat:\n"
