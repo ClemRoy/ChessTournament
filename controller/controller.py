@@ -210,8 +210,6 @@ class Controller:
                 self.set_time_controller()
             return time
 
-
-
     def check_player_index_existance(self):
         """take int from function and check if the int exist in data base,then return it if it does"""  
         player_index = self.view.select_player()
