@@ -6,6 +6,7 @@ from pathlib import Path
 from tinydb import TinyDB
 from tinydb.queries import Query
 from tinydb.table import Document
+from tinydb.utils import V
 from model.player import Player
 from model.playerlist import Playerlist
 from model.match import Match
@@ -92,14 +93,12 @@ class Controller:
             self.ongoing_tournament_db.upsert(Document(tournament_to_save,doc_id=tournament_index))
 
     def save_finished_tournament(self,tournament):
-        tournament_index = len(self.load_finished_tournament() + 1)
+        tournament_index = len(self.load_finished_tournament()) + 1
         tournament_to_save = self.ready_tournament_for_save(tournament)
         self.ongoing_tournament_db.remove(doc_ids=[self.current_tournament_index])
         self.finished_tour_namentdb.insert(tournament_to_save)
         self.view.tournament_is_over(tournament_index)
-
-
-
+        self.main_menu()
 
     ###Load related function ###
 
@@ -316,6 +315,7 @@ class Controller:
     def tournament_loading_menu(self):
         self.view.display_ongoing_tournament_list(self.load_ongoing_tournament())
         tournament_index = self.check_tournament_index_existance()
+        print(tournament_index)
         tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
         tournament_name = tournament_dict["tournament_name"]
         place = tournament_dict["place"]
@@ -382,8 +382,6 @@ class Controller:
         return match_list
 
 
-
-
     def load_tournament_list_of_rounds(self,tournament_dict,generated_players):
         list_of_rounds = []
         rounds = tournament_dict["list_of_rounds"]
@@ -417,15 +415,14 @@ class Controller:
     def check_tournament_index_existance(self):
         """take int from function and check if the int exist in data base,then return it if it does"""  
         tournament_index = self.view.ask_for_tournament_to_load()
-        if self.check_input_type(tournament_index) is True:
-            if int(tournament_index)==0 or int(tournament_index) >len(self.load_ongoing_tournament()):
-                print(f"Aucun tournois n'a l'index n°:{tournament_index}\n"
-                "Veuillez rentrer une nouvelle valeur\n")
-                self.check_tournament_index_existance()
-            else:
-                return int(tournament_index)
-        else:
-            tournament_index = self.check_tournament_index_existance()
+        while self.check_input_type(tournament_index) is not True:
+            tournament_index = self.view.ask_for_tournament_to_load()
+        while int(tournament_index)==0 or int(tournament_index) >len(self.load_ongoing_tournament()):
+            print(f"Aucun tournois n'a l'index n°:{tournament_index}\n"
+            "Veuillez rentrer une nouvelle valeur\n")
+            tournament_index = self.view.ask_for_tournament_to_load()          
+        return int(tournament_index)
+
 
  ###Tournament controller###
 
@@ -455,8 +452,6 @@ class Controller:
                     for round_index in range(len(self.tournament.list_of_rounds)):
                         if self.tournament.list_of_rounds[round_index].status != "Finished":
                             self.round_menu(round_index)
-                        else:
-                            self.view.tournament_is_over()
                 elif int(answer) == 4:
                     self.save_ongoing_tournament(self.tournament,self.current_tournament_index)
                     self.main_menu()
@@ -499,7 +494,7 @@ class Controller:
                         if round_index == 0:
                             self.first_round_matchmaking()
                         else:
-                            self.match_making(round_index)
+                            self.match_making1(round_index)
                 elif int(answer) == 3:
                     self.start_round(round_index)
                 elif int(answer) == 4:
@@ -514,58 +509,79 @@ class Controller:
                 self.round_menu(round_index)
 
     def generate_previous_matchlist(self):
-        already_played_match = []
+        already_played_match = {}
         for round in range(len(self.tournament.list_of_rounds)):
             if self.tournament.list_of_rounds[round].status == "Finished":
                 for match in range(len(self.tournament.list_of_rounds[round].match_list)):
                     played_match = self.tournament.list_of_rounds[round].match_list[match]
-                    already_played_match.append(
-                        [played_match.first_player.tournament_player_index,
-                        played_match.second_player.tournament_player_index]
-                    )
-        for match in already_played_match:
-            match.sort()
+                    already_played_match[played_match.first_player.tournament_player_index]=played_match.second_player.tournament_player_index
         return already_played_match
 
+    
+    def get_sorted_players_idx(self):
+        new_list =  self.tournament.playerlist.sort_playerlist_by_score_and_rank()
+        return [el.tournament_player_index for el in new_list]
+        
+    
+    def match_making(self, round_index):
+        sorted_players_indexes = self.get_sorted_players_idx() # [4, 2, 3, 1]
+        played_matchs = self.generate_previous_matchlist() # {1:3}
+        match_to_be_played = []
+        for idx,_ in enumerate(sorted_players_indexes):
+            match_to_be_played.append(self.get_duo_for_first_player(sorted_players_indexes[idx:], played_matchs))
+        return match_to_be_played
+            
+    def remove_players(self,sorted_players):
+        """remove first two element of a list and return it"""
+        sorted_players.pop(0)
+        sorted_players.pop(0)
+        return sorted_players
+    
+    def get_duo_for_first_player(self, sorted_players, played_matchs,next_round_match = []):
+        if sorted_players == []:
+            return next_round_match
+        elif len(sorted_players) == 1:
+            raise Exception("Something went wrong")
+        elif len(sorted_players) == 2 and  (not self._did_players_already_played(sorted_players[0], sorted_players[1],played_matchs)):
+                next_round_match.append({sorted_players[0] : sorted_players[1]})
+                sorted_players = self.remove_players(sorted_players)
+                return next_round_match
+        else:
+            if self._did_players_already_played(sorted_players[0],sorted_players[1],played_matchs):
+                next_round_match.append({sorted_players[0] : sorted_players[1]})
+                sorted_players = self.remove_players(sorted_players)
+                return self.get_duo_for_first_player(sorted_players,played_matchs,next_round_match)
+            else:
+                return self.get_duo_for_first_player(sorted_players[0] + sorted_players[2:],played_matchs,next_round_match)
+                
+    def _did_players_already_played(self, idx_player1, idx_player2, played_matchs):
+        """Return True if the player never played together"""
+        return (played_matchs.get(idx_player1) != idx_player2) and  (played_matchs.get(idx_player2) != idx_player1)
 
-    def match_making(self,round_index):
-        already_played_match = self.generate_previous_matchlist()
-        next_round_matchs = []
-        round_playerlist = []
+    def match_tournament_index_with_player_object(self,tournament_index):
         for player in self.tournament.playerlist.playerlist:
-            round_playerlist.append(player)
-        round_playerlist.sort(key=lambda player: (player.tournament_score, player.rank))
-        round_playerlist.reverse()
-        while len(round_playerlist) > 0:
-            first_player = round_playerlist[0]
-            possible_adversaries = round_playerlist[1:]
-            for player in range(len(possible_adversaries)):
-                second_player = possible_adversaries[player]
-                new_match = [first_player.tournament_player_index,second_player.tournament_player_index]
-                new_match.sort()
-                if new_match not in already_played_match:
-                    next_round_matchs.append(Match(first_player,second_player))
-                    round_playerlist.remove(first_player)
-                    round_playerlist.remove(second_player)
-                    print("les adversaire ne se sont jamais rencontré")
-                    break
-                elif new_match in already_played_match:
-                    if len(possible_adversaries) > 1:
-                        print(len(possible_adversaries))
-                        print("les adversaire se sont rencontré")
-                    else:
-                        print("Il n'y a plus d'autres joueurs a associer")
-                        next_round_matchs.append(Match(first_player,second_player))
-                        round_playerlist.remove(first_player)
-                        round_playerlist.remove(second_player)
-                        break
+            if player.tournament_player_index == tournament_index:
+                return player
+
+    def turn_match_dict_into_match_obj(self,match_dictionnary):
+        first_player_index = list(match_dictionnary.keys())[0]
+        first_player = self.match_tournament_index_with_player_object(first_player_index)
+        second_player_index = list(match_dictionnary.values())[0]
+        second_player = self.match_tournament_index_with_player_object(second_player_index)
+        return Match(first_player,second_player)
+
+    def match_making1(self,round_index):
+        next_round_matchs = []
+        already_played_match = self.generate_previous_matchlist()
+        round_playerlist_index = self.get_sorted_players_idx()
+        next_matchs_dict = self.get_duo_for_first_player(round_playerlist_index,already_played_match)
+        for match in next_matchs_dict:
+            next_round_matchs.append(self.turn_match_dict_into_match_obj(match))
         self.tournament.list_of_rounds[round_index].match_list = next_round_matchs
         self.tournament.list_of_rounds[round_index].mark_match_as_generated()
-        
-
 
     def end_round(self,round_index):
-        if self.tournament.list_of_rounds[round_index].status == "Unplayed":
+        if self.tournament.list_of_rounds[round_index].status == "Generated":
             self.view.error_end_not_started()
             self.round_menu(round_index)
         elif self.tournament.list_of_rounds[round_index].status == "Finished":
@@ -578,8 +594,10 @@ class Controller:
                 self.tournament.list_of_rounds[round_index].end_round()
                 for match in range(len(self.tournament.list_of_rounds[round_index].match_list)):
                     self.match_result(self.tournament.list_of_rounds[round_index].match_list[match])
-                    if round_index == len(self.tournament.list_of_rounds):
-                        self.save_finished_tournament(self.tournament)
+                if round_index + 1 == len(self.tournament.list_of_rounds):
+                    self.save_finished_tournament(self.tournament)
+                else:
+                    self.round_menu(round_index + 1)
             elif answer.lower() == "n":
                 self.round_menu(round_index)
             else:
@@ -607,6 +625,21 @@ class Controller:
                 self.view.incorrect_input()
                 self.start_round(round_index)
 
+    def first_player_victory(self,match):
+        match.first_player_victory()
+        match.second_player_defeat()
+        match.end_match()
+
+    def second_player_victory(self,match):
+        match.second_player_victory()
+        match.first_player_defeat()
+        match.end_match()
+
+    def draw(self,match):
+        match.first_player_draw()
+        match.second_player_draw()
+        match.end_match()
+
     def match_result(self,match):
         match_result = self.view.match_result_prompt(match)
         try:
@@ -618,15 +651,9 @@ class Controller:
             if int(match_result) not in [1,2,3]:
                 self.view.incorrect_input()
                 self.match_result(match)
-            elif int(match_result) == 1:
-                match.first_player_victory()
-                match.second_player_defeat()
-                match.end_match()
+            if int(match_result) == 1:
+                self.first_player_victory(match)
             elif int(match_result) == 2:
-                match.second_player_victory()
-                match.first_player_defeat()
-                match.end_match()
+                self.second_player_victory(match)
             elif int(match_result) == 3:
-                match.first_player_draw()
-                match.second_player_draw()
-                match.end_match()
+                self.draw(match)

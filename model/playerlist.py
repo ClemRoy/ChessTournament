@@ -30,8 +30,9 @@ class Playerlist(Base):
         
 
     def sort_playerlist_by_score_and_rank(self):
+        """return list of tournament player starting from the strongest"""
         new_player_list = self.playerlist
-        new_player_list.sort(key=lambda player: (player.tournament_score, player.rank))
+        new_player_list.sort(key=lambda player: (player.tournament_score, player.rank), reverse=True)
         return new_player_list
 
     def find_player_list_middle(self,list):
@@ -54,7 +55,7 @@ class Playerlist(Base):
 
     def get_player_list_score(self):
         """Display the list of tournament player by tournament score"""
-        sorted_by_tourn_score = sorted(self.playerlist, key=lambda player: player.tournament_score)
+        sorted_by_tourn_score = self.sort_playerlist_by_score_and_rank()
         liste = "Liste des joueurs par index du tournois: \n"
         for player in sorted_by_tourn_score:
             liste += "\n" + str(player) + "\n"
