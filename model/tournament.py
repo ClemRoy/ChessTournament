@@ -6,6 +6,7 @@ from model.round import Round
 
 @Base.register
 class Tournament(Base):
+    """Tournament object"""
 
     def __init__(
         self,
@@ -18,6 +19,7 @@ class Tournament(Base):
         number_of_rounds = 4,
         list_of_rounds = []
         ):
+        """Create tournament object"""
         super().__init__()
         self.tournament_name = tournament_name
         self.place = place
@@ -33,11 +35,8 @@ class Tournament(Base):
                 self.list_of_rounds.append(Round(round_name))
 
 
-    def save_round(self, round):
-        self.list_of_rounds.append(round)
-
-
     def serialize(self):
+        """transform tournament into dictionary savable in Tinydb"""
         serialized_ongoing_tournament = {
             "tournament_name": self.tournament_name,
             "place": self.place,

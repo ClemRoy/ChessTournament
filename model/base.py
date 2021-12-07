@@ -4,6 +4,7 @@ import abc
 
 
 class Base(metaclass=abc.ABCMeta):
+    """Abstract object to enforce serialize presence"""
 
     @abc.abstractmethod
     def serialize(self):

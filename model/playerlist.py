@@ -11,6 +11,7 @@ class Playerlist(Base):
         self.playerlist = playerlist
 
     def serialize(self):
+        """turn playerlisst into a dictionnary of dictionnary savable into TinyDb"""
         serialized_player_list = {}
         for i in range(len(self.playerlist)):
             serialized_player_list[i] = self.playerlist[i].serialize()
@@ -70,8 +71,10 @@ class Playerlist(Base):
         return liste
 
     def __str__(self):
+        """used in print"""
         return self.get_player_list()
 
     def __repr__(self) -> str:
+        """used in print"""
         return str(self)    
 
