@@ -18,14 +18,17 @@ class Controller:
     """Main controller"""
 
     def __init__(self,view):
+        """create controller object"""
 
         #View
         self.view = view
 
     ###Set players attribute list for later use in save/load function###
+
     PLAYERVALUESLIST = ["family_name", "first_name", "birth_date", "birth_date", "rank" ]
 
     ###Set path to data folder and database for players and tournaments###
+
     DATAFOLDER = Path("Data")
     db = TinyDB( DATAFOLDER/'database.json')
     player_db = db.table('players')
@@ -539,17 +542,7 @@ class Controller:
     def get_sorted_players_idx(self):
         new_list =  self.tournament.playerlist.sort_playerlist_by_score_and_rank()
         return [el.tournament_player_index for el in new_list]
-        
-    
-    def match_making(self, round_index):
-        sorted_players_indexes = self.get_sorted_players_idx() # [4, 2, 3, 1]
-        played_matchs = self.generate_previous_matchlist() # {1:3}
-        print(played_matchs)
-        match_to_be_played = []
-        for idx,_ in enumerate(sorted_players_indexes):
-            match_to_be_played.append(self.get_duo_for_first_player(sorted_players_indexes[idx:], played_matchs))
-        return match_to_be_played
-            
+
     def remove_players(self,sorted_players):
         """remove first two element of a list and return it"""
         sorted_players.pop(0)
@@ -557,13 +550,19 @@ class Controller:
         return sorted_players
     
     def get_duo_for_first_player(self, sorted_players, played_matchs):
-        if len(sorted_players) == 1:
+        if len(sorted_players) < 2:
             pass
         elif len(sorted_players) == 2 and  not self._did_players_already_played(sorted_players[0], sorted_players[1],played_matchs):
-            return {sorted_players[0] : sorted_players[1] }
+            first_player = sorted_players[0]
+            second_player = sorted_players[1]
+            self.remove_players(sorted_players)
+            return {first_player : second_player }
         else:
             if self._did_players_already_played(sorted_players[0], sorted_players[1],played_matchs):
-                return {sorted_players[0] : sorted_players[1] }
+                first_player = sorted_players[0]
+                second_player = sorted_players[1]
+                self.remove_players(sorted_players)
+                return {first_player : second_player }
             elif not self._did_players_already_played(sorted_players[0],sorted_players[1],played_matchs):
                 self.get_duo_for_first_player([sorted_players[0]] + sorted_players[:2],played_matchs )
                 
@@ -593,18 +592,35 @@ class Controller:
                 next_matchs_dict.remove(None)
         return next_matchs_dict
 
+    def match_selection(self,match_dict):
+        players_already_slected = []
+        selected_match = []
+        for dict_idx in range(len(match_dict)):
+            match_players = list(match_dict[dict_idx].items())
+            first_player = match_players[0][0]
+            second_player = match_players[0][1]
+            if first_player not in players_already_slected:
+                if second_player not in players_already_slected:
+                    players_already_slected.append(first_player)
+                    players_already_slected.append(second_player)
+                    selected_match.append(match_dict[dict_idx])
+        return selected_match
+
+
     def match_making1(self,round_index):
+        """"""
         next_round_matchs = []
         already_played_match = self.generate_previous_matchlist()
         round_playerlist_index = self.get_sorted_players_idx()
         next_matchs_dict = self.get_match_dict(round_playerlist_index,already_played_match)
-        del next_matchs_dict[4:]
-        for match in next_matchs_dict:
+        selected_match = self.match_selection(next_matchs_dict)
+        for match in selected_match:
             next_round_matchs.append(self.turn_match_dict_into_match_obj(match))
         self.tournament.list_of_rounds[round_index].match_list = next_round_matchs
         self.tournament.list_of_rounds[round_index].mark_match_as_generated()
 
     def end_round(self,round_index):
+        """check round status to see if round can be ended,then call function to end it if it can"""
         if self.tournament.list_of_rounds[round_index].status == "Ungenerated":
             self.view.error_end_not_generated()
             self.round_menu(round_index)
@@ -615,25 +631,31 @@ class Controller:
             self.view.error_end_already_ended()
             self.round_menu(round_index)
         elif self.tournament.list_of_rounds[round_index].status == "Started":
-            self.view.end_round_confirmation()
-            answer = self.view.ask_for_input()
-            if answer.lower() == "y":
-                self.tournament.list_of_rounds[round_index].end_round()
-                for match in range(len(self.tournament.list_of_rounds[round_index].match_list)):
-                    self.match_result(self.tournament.list_of_rounds[round_index].match_list[match])
-                if round_index + 1 == len(self.tournament.list_of_rounds):
-                    self.save_finished_tournament(self.tournament)
-                else:
-                    self.save_ongoing_tournament(self.tournament,self.current_tournament_index)
-                    self.round_menu(round_index + 1)
-            elif answer.lower() == "n":
-                self.round_menu(round_index)
+            self.end_round_coorect(round_index)
+
+    def end_round_coorect(self, round_index):
+        """ask for confirmation then mark round as finished,create end time stamp,
+        and call next round menu or save tournament if finished"""
+        self.view.end_round_confirmation()
+        answer = self.view.ask_for_input()
+        if answer.lower() == "y":
+            self.tournament.list_of_rounds[round_index].end_round()
+            for match in range(len(self.tournament.list_of_rounds[round_index].match_list)):
+                self.match_result(self.tournament.list_of_rounds[round_index].match_list[match])
+            if round_index + 1 == len(self.tournament.list_of_rounds):
+                self.save_finished_tournament(self.tournament)
             else:
-                self.view.incorrect_input()
-                self.end_round(round_index)
+                self.save_ongoing_tournament(self.tournament,self.current_tournament_index)
+                self.round_menu(round_index + 1)
+        elif answer.lower() == "n":
+            self.round_menu(round_index)
+        else:
+            self.view.incorrect_input()
+            self.end_round(round_index)  
 
 
     def start_round(self, round_index):
+        """check round status before calling funct to start round if it can be"""
         if self.tournament.list_of_rounds[round_index].status == "Ungenerated":
             self.view.error_start_no_match_list()
             self.round_menu(round_index)
@@ -644,15 +666,20 @@ class Controller:
             self.view.error_start_already_started()
             self.round_menu(round_index)
         elif self.tournament.list_of_rounds[round_index].status == "Generated":
-            self.view.start_round_confirmation()
-            answer = self.view.ask_for_input()
-            if answer.lower() == "y":
-                self.tournament.list_of_rounds[round_index].start_round()
-            elif answer.lower() == "n":
-                self.round_menu(round_index)
-            else:
-                self.view.incorrect_input()
-                self.start_round(round_index)
+            self.start_round_correct(round_index)
+
+
+    def start_round_correct(self, round_index):
+        """ask for confirmation then mark round as started and create start time stamp"""
+        self.view.start_round_confirmation()
+        answer = self.view.ask_for_input()
+        if answer.lower() == "y":
+            self.tournament.list_of_rounds[round_index].start_round()
+        elif answer.lower() == "n":
+            self.round_menu(round_index)
+        else:
+            self.view.incorrect_input()
+            self.start_round(round_index)
 
     def first_player_victory(self,match):
         """Mark match as first player victory"""
@@ -677,7 +704,6 @@ class Controller:
         match_result= self.view.match_result_prompt(match)
         if self.check_input_type(match_result):
             if int(match_result) in [1,2,3]:
-                print(int(match_result))
                 return int(match_result)
             else:
                 return self.check_match_result_input(match)
