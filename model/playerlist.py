@@ -1,11 +1,11 @@
-#coding:utf-8
+# coding:utf-8
 
 from model.base import Base
 
-@Base.register
+
 class Playerlist(Base):
 
-    def __init__(self, playerlist:list ):
+    def __init__(self, playerlist: list):
         super().__init__()
         """Create a player list"""
         self.playerlist = playerlist
@@ -28,7 +28,6 @@ class Playerlist(Base):
         new_player_list = self.playerlist
         new_player_list.sort(key=lambda player: player.rank)
         return new_player_list
-        
 
     def sort_playerlist_by_score_and_rank(self):
         """return list of tournament player starting from the strongest"""
@@ -36,7 +35,7 @@ class Playerlist(Base):
         new_player_list.sort(key=lambda player: (player.tournament_score, player.rank), reverse=True)
         return new_player_list
 
-    def find_player_list_middle(self,list):
+    def find_player_list_middle(self, list):
         """find the middle of the player list"""
         lenth = len(list)
         middle_index = lenth // 2
@@ -76,5 +75,4 @@ class Playerlist(Base):
 
     def __repr__(self) -> str:
         """used in print"""
-        return str(self)    
-
+        return str(self)

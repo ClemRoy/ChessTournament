@@ -82,7 +82,6 @@ class Controller:
         savable_tournament["list_of_players"] = self.find_player_db_intersect_tournament(savable_tournament)
         return savable_tournament
 
-
     def save_ongoing_tournament(self, tournament,tournament_index):
         """save ongoing tournament"""
         tournament_to_save = self.ready_tournament_for_save(tournament)
@@ -220,7 +219,8 @@ class Controller:
             return time
 
     def check_player_index_existance(self):
-        """take int from function and check if the int exist in data base,then return it if it does"""  
+        """take int from function and check if the int match
+        an index in player database,then return it if it does"""  
         player_index = self.view.select_player()
         if self.check_input_type(player_index):
             if int(player_index) == 0 or  int(player_index) > len(self.load_player_db()):
@@ -540,6 +540,7 @@ class Controller:
 
     
     def get_sorted_players_idx(self):
+        """return a list of players index,from the highest score/rank to the lowest"""
         new_list =  self.tournament.playerlist.sort_playerlist_by_score_and_rank()
         return [el.tournament_player_index for el in new_list]
 
@@ -592,7 +593,36 @@ class Controller:
                 next_matchs_dict.remove(None)
         return next_matchs_dict
 
+    def get_already_selected_players(self, match_selection):
+        """return a list of the players index already selected for a match this round"""
+        already_selected_players = []
+        for match in match_selection:
+            already_selected_players.append(list(match.keys())[0])
+            already_selected_players.append(list(match.values())[0])
+        return already_selected_players
+
+    def find_player_without_match(self,already_selected_players):
+        """determine which player don't have a match"""
+        players_without_match = []
+        for player_idx in range(1,(len(self.tournament.playerlist.playerlist)+1)):
+            if player_idx not in already_selected_players:
+                players_without_match.append(player_idx)
+        return players_without_match
+
+    def fill_match_selection(self,match_selection):
+        """Get a list of player already playing this round and a list of the players 
+        not selected for a match and pair them together"""
+        already_selected_players = self.get_already_selected_players(match_selection)
+        players_without_match = self.find_player_without_match(already_selected_players)
+        last_match = {players_without_match[0] : players_without_match[1]}
+        return last_match
+
+
     def match_selection(self,match_dict):
+        """Get a list of dictionnary containing all match who have never been played,
+        select them so that the same player don't have to play two match in the same round,
+        fill it with a match between player who have already played together if need be,
+        then return the matchs selected for the next round"""
         players_already_slected = []
         selected_match = []
         for dict_idx in range(len(match_dict)):
@@ -604,11 +634,14 @@ class Controller:
                     players_already_slected.append(first_player)
                     players_already_slected.append(second_player)
                     selected_match.append(match_dict[dict_idx])
+        if len(selected_match) < 4:
+            selected_match.append(self.fill_match_selection(selected_match))
         return selected_match
 
 
     def match_making1(self,round_index):
-        """"""
+        """generate a list of previous matchs,get a list of players
+         indexs sorted from the strongest to the weakest"""
         next_round_matchs = []
         already_played_match = self.generate_previous_matchlist()
         round_playerlist_index = self.get_sorted_players_idx()

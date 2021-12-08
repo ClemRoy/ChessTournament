@@ -1,16 +1,18 @@
-#coding:utf-8
+# coding:utf-8
 
 import time
 from model.base import Base
 
-@Base.register
+
 class Round(Base):
     """round object"""
 
-    def __init__(self,
-    name,
-    status = "Ungenerated",
-    match_list = []):
+    def __init__(
+        self,
+        name,
+        status="Ungenerated",
+        match_list=[]
+    ):
         """Create round object"""
         super().__init__()
         self.name = name
@@ -38,7 +40,7 @@ class Round(Base):
         """set round start time when loading tournament"""
         self.start_time = start_time
 
-    def set_end_time(self,end_time):
+    def set_end_time(self, end_time):
         """set round end time when loading tournament"""
         self.end_time = end_time
 
@@ -52,9 +54,9 @@ class Round(Base):
     def serialize_ungenerated(self):
         """turn ungenerated round into dictionnary savable into TinyDb"""
         serialized_round = {
-            "round_name" : self.name,
-            "round_status" : self.status,
-            "round_match_list" : self.match_list
+            "round_name": self.name,
+            "round_status": self.status,
+            "round_match_list": self.match_list
         }
         return serialized_round
 
@@ -62,9 +64,9 @@ class Round(Base):
         """turn generated round into dictionnary savable into TinyDb"""
         serialized_match_list = self.serialize_match_list()
         serialized_round = {
-            "round_name" : self.name,
-            "round_status" : self.status,
-            "round_match_list" : serialized_match_list
+            "round_name": self.name,
+            "round_status": self.status,
+            "round_match_list": serialized_match_list
         }
         return serialized_round
 
@@ -72,10 +74,10 @@ class Round(Base):
         """turn startedd round into dictionnary savable into TinyDb"""
         serialized_match_list = self.serialize_match_list()
         serialized_round = {
-            "round_name" : self.name,
-            "round_status" : self.status,
-            "round_match_list" : serialized_match_list,
-            "round_start_time" : self.start_time,                
+            "round_name": self.name,
+            "round_status": self.status,
+            "round_match_list": serialized_match_list,
+            "round_start_time": self.start_time,
         }
         return serialized_round
 
@@ -83,11 +85,11 @@ class Round(Base):
         """turn finished round into dictionnary savable into TinyDb"""
         serialized_match_list = self.serialize_match_list()
         serialized_round = {
-            "round_name" : self.name,
-            "round_status" : self.status,
-            "round_match_list" : serialized_match_list,
-            "round_start_time" : self.start_time,
-            "round_end_time" : self.end_time
+            "round_name": self.name,
+            "round_status": self.status,
+            "round_match_list": serialized_match_list,
+            "round_start_time": self.start_time,
+            "round_end_time": self.end_time
         }
         return serialized_round
 
@@ -101,4 +103,3 @@ class Round(Base):
             return self.serialize_started()
         elif self.status == "Finished":
             return self.serialize_finished()
-

@@ -1,20 +1,21 @@
-#coding:utf-8
+# coding:utf-8
 """match object"""
 
 from model.base import Base
 from model.player import Player
 
-@Base.register
-class Match():
+
+class Match(Base):
     """Match object"""
 
-    def __init__(self, first_player:Player, second_player:Player):
+    def __init__(self, first_player: Player, second_player: Player):
         """create match object"""
+        super().__init__()
         self.first_player = first_player
         self.second_player = second_player
         self.match_status = "Unplayed"
 
-    def apply_result(self,result):
+    def apply_result(self, result):
         """apply player input to set match result
         (1=1st player victory,2=2nd player victory,3=Draw)"""
         if result == 1:
@@ -27,13 +28,13 @@ class Match():
             self.first_player_draw()
             self.second_player_draw()
         self.end_match()
-        
+
     def first_player_victory(self):
         """apply first player victory"""
         self.first_player_result = "Victory"
         self.first_player.victory()
         return self.first_player_result
-    
+
     def first_player_defeat(self):
         """apply first player defeat"""
         self.first_player_result = "Defeat"
@@ -61,7 +62,7 @@ class Match():
         self.second_player_result = "Draw"
         self.second_player.draw()
         return self.second_player_result
-        
+
     def start_match(self):
         """set match status as started"""
         self.match_status = "Started"
@@ -72,7 +73,7 @@ class Match():
         self.match_status = "Finished"
         return self.match_status
 
-    def set_result(self,result):
+    def set_result(self, result):
         """set match result when loading tournament"""
         if result == 1:
             self.first_player_result = "Victory"
@@ -87,27 +88,27 @@ class Match():
             self.second_player_result = "Draw"
             self.end_match()
 
-
-
     def serialize(self):
+        """Turn match into dictionnary savable in TinyDb"""
         if self.match_status == "Unplayed":
             serialized_match = {
-            "first_player": self.first_player.tournament_player_index,
-            "second_player": self.second_player.tournament_player_index,
-            "match_status": self.match_status
-        }
+                "first_player": self.first_player.tournament_player_index,
+                "second_player": self.second_player.tournament_player_index,
+                "match_status": self.match_status
+                }
         elif self.match_status == "Finished":
-            serialized_match = ( [self.first_player.tournament_player_index,self.first_player_result],
-            [self.second_player.tournament_player_index,self.second_player_result]
-            )
+            serialized_match = ([self.first_player.tournament_player_index, self.first_player_result],
+                                [self.second_player.tournament_player_index, self.second_player_result])
         return serialized_match
 
     def __str__(self):
         """used in print"""
-        display = ("\nMatch opposant:\n"
-        f"{self.first_player.give_full_name()}\n"
-        "contre \n"
-        f"{self.second_player.give_full_name()}\n")
+        display = (
+            "\nMatch opposant:\n"
+            f"{self.first_player.give_full_name()}\n"
+            "contre \n"
+            f"{self.second_player.give_full_name()}\n"
+        )
         if self.match_status == "Unplayed":
             display += " Le match n'a pas été joué\n"
         elif self.match_status == "Finished":
@@ -117,9 +118,9 @@ class Match():
             elif self.first_player_result == "Defeat":
                 display += f"Victoire de {self.second_player.give_full_name()}\n"
             elif self.first_player_result == "Draw":
-                display += "Match nul\n"            
+                display += "Match nul\n"
         return display
 
-    
     def __repr__(self) -> str:
+        """used in print"""
         return str(self)

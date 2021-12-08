@@ -1,10 +1,10 @@
-#coding:utf-8
+# coding:utf-8
 
 from model.base import Base
 from model.playerlist import Playerlist
 from model.round import Round
 
-@Base.register
+
 class Tournament(Base):
     """Tournament object"""
 
@@ -13,12 +13,12 @@ class Tournament(Base):
         tournament_name,
         place,
         dates,
-        list_of_players:Playerlist,
+        list_of_players: Playerlist,
         time_control,
         description,
-        number_of_rounds = 4,
-        list_of_rounds = []
-        ):
+        number_of_rounds=4,
+        list_of_rounds=[]
+            ):
         """Create tournament object"""
         super().__init__()
         self.tournament_name = tournament_name
@@ -34,18 +34,17 @@ class Tournament(Base):
                 round_name = f"Round {round + 1}"
                 self.list_of_rounds.append(Round(round_name))
 
-
     def serialize(self):
         """transform tournament into dictionary savable in Tinydb"""
         serialized_ongoing_tournament = {
             "tournament_name": self.tournament_name,
             "place": self.place,
             "dates": self.dates,
-            "list_of_players":self.playerlist.serialize(),
+            "list_of_players": self.playerlist.serialize(),
             "time_control": self.time_control,
             "description": self.description,
             "number_of_rounds": self.number_of_round,
-            "list_of_rounds" : []
+            "list_of_rounds": []
         }
         for round in range(len(self.list_of_rounds)):
             serialized_ongoing_tournament["list_of_rounds"].append(self.list_of_rounds[round].serialize())
