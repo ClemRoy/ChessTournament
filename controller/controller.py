@@ -66,7 +66,8 @@ class Controller:
         return player_id
 
     def find_player_db_intersect_tournament(self,tournament):
-        """take the list of players in a serialized tournament and return it with the player index (from the player database) instead of the full player infos"""
+        """take the list of players in a serialized tournament and return it with
+         the player index (from the player database) instead of the full player infos"""
         intersect = []      
         serialized_tournament_players = tournament["list_of_players"]
         for player in serialized_tournament_players:
@@ -85,10 +86,7 @@ class Controller:
     def save_ongoing_tournament(self, tournament,tournament_index):
         """save ongoing tournament"""
         tournament_to_save = self.ready_tournament_for_save(tournament)
-        if tournament_index > len(self.load_ongoing_tournament()):
-            self.ongoing_tournament_db.insert(tournament_to_save)
-        else:
-            self.ongoing_tournament_db.upsert(Document(tournament_to_save,doc_id=tournament_index))
+        self.ongoing_tournament_db.upsert(Document(tournament_to_save,doc_id=tournament_index))
 
     def save_finished_tournament(self,tournament):
         """Remove finished tournament from ongoing tournament database and 
@@ -224,51 +222,58 @@ class Controller:
         player_index = self.view.select_player()
         if self.check_input_type(player_index):
             if int(player_index) == 0 or  int(player_index) > len(self.load_player_db()):
-                print(f"Aucun joueur n'a l'index n°:{player_index}\n"
-                "Veuillez rentrer une nouvelle valeur\n")
+                self.view.incorrect_player_index(player_index)
                 player_index = self.check_player_index_existance()
             else:
                 return int(player_index)
         else:
             player_index = self.check_player_index_existance()
 
-    def get_players(self):
-        """select 8 players from players in database """
+    def add_player(self):
+        """establish the tournament playerlist"""
         players = []
         while len(players) < 8:
-            if None in players:
-                players.remove(None)
             self.show_player_index_for_selection()
             player_index = self.check_player_index_existance() 
             if player_index in players:
                 print("Le joueur est déjà présent dans la liste,veuillez ajouter un autre joueur \n")
+            elif player_index == None:
+                pass
             elif player_index not in players:
                 players.append(player_index)
-            print("Index des joueurs déjà selectionés:\n")
-            print(players)
-        print("Liste des joueurs complète!\n"
-        "Voici les joueurs selectionés:\n")
+            self.view.display_selected_players(players)
+        return players
+
+    def load_players(self,players):
+        loaded_players = []
         for player in players:
-            print(str(self.load_player(player - 1 ))) #Substract one to match db as list starting from 0
-        print("souhaitez vous créer un tournois avec ces joueurs?\n")
+            loaded_players.append(self.load_player(player -1)) #Substract one to match db as list starting from 0
+        return loaded_players
+
+    def initialize_players(self,loaded_players):
+        player_to_initialize = loaded_players
+        tournament_player_index = 1
+        for loaded_player in player_to_initialize:
+            loaded_player.initialize_tournament_score()
+            loaded_player.initialize_tournament_player_index(tournament_player_index)
+            tournament_player_index += 1
+        return player_to_initialize
+
+
+    def get_players(self):
+        """select 8 players from players in database """
+        players = self.add_player()
+        loaded_players = self.load_players(players)
+        self.view.player_selection_list_full(loaded_players)
         answer = self.view.confirmation()
         if answer == 'y':
-            loaded_players = []
-            for player in players:
-                loaded_players.append(self.load_player(player -1))
-            tournament_player_index = 1
-            for loaded_player in loaded_players:
-                    loaded_player.initialize_tournament_score()
-                    loaded_player.initialize_tournament_player_index(tournament_player_index)
-                    tournament_player_index += 1
-            player_list = Playerlist(loaded_players)
-            print("Les joueurs selectionnés sont:\n")
-            print(player_list)
+            initialized_players = self.initialize_players(loaded_players)
+            player_list = Playerlist(initialized_players)
             return player_list
         elif answer == "n":
             self.get_players()
 
-    def create_tournament(self):
+    def get_tournament_info(self):
         tournament = {}
         tournament["name"] = self.view.ask_for_tournament_name()
         tournament["place"] = self.view.ask_for_place()
@@ -276,74 +281,81 @@ class Controller:
         tournament["players"] = self.get_players()
         tournament["time"] = self.set_time_controller()
         tournament["description"] = self.view.ask_for_description()
-        print("Souhaitez vous créer un tournois avec les paramètres suivants?")
-        for key in tournament:
-            print( str(key) + " :" + str(tournament[key]) + "\n")
-        confirmation = self.view.confirmation()
-        if confirmation == "y":
-            print("Création du tournois")
-            tournament_index = len(self.load_ongoing_tournament()) +1
-            print(f"Sauvegardé en tant que tournois n°{tournament_index}\n"
-            "Chargez le tournois pour intéragir avec")
-            new_tournament = Tournament(
+        return tournament
+
+    def turn_tourn_dict_into_object(self,tournament_dict):
+        tournament = tournament_dict
+        new_tournament = Tournament(
                 tournament["name"],
                 tournament["place"],
                 tournament["date"],
                 tournament["players"],
                 tournament["time"],
                 tournament["description"]
-            )              
-            self.save_ongoing_tournament(new_tournament,tournament_index)
-            self.main_menu()
+            )
+        return new_tournament
+
+    def save_new_tournament(self,tournament_dict):
+        tournament_index = len(self.load_ongoing_tournament()) +1
+        self.view.tournament_creation_display(tournament_index)
+        new_tournament = self.turn_tourn_dict_into_object(tournament_dict)
+        self.save_ongoing_tournament(new_tournament,tournament_index)
+        self.main_menu()
+
+    def create_tournament(self):
+        tournament_dict = self.get_tournament_info()
+        self.view.tournament_creation_confirmation(tournament_dict)
+        confirmation = self.view.confirmation()
+        if confirmation == "y":
+            self.save_new_tournament(tournament_dict)
         elif confirmation == "n":
-            print("Vous allez retourner au menu principal\n"
-            "Veuillez confirmer?`n")
+            self.view.return_to_menu_confirmation()
             choice = self.view.confirmation()
             if choice == "n":
-                print("Création du tournois")
-                tournament_index = len(self.load_ongoing_tournament()) +1
-                print(f"Sauvegardé en tant que tournois n°{tournament_index}\n"
-                "Chargez le tournois pour intéragir avec")
-                new_tournament = Tournament(
-                    tournament["name"],
-                    tournament["place"],
-                    tournament["date"],
-                    tournament["players"],
-                    tournament["time"],
-                    tournament["description"]
-                )
-                self.save_ongoing_tournament(new_tournament,tournament_index)
-                self.main_menu()
+                self.save_new_tournament(tournament_dict)
             elif choice == "y":
                 self.main_menu()
         
     ###Relative to loading an ongoing tournament"""
 
-    def tournament_loading_menu(self):
+    def get_tournament_to_load_index(self):
         if self.load_ongoing_tournament() == []:
             self.view.no_ongoing_tournament()
             self.main_menu()
         self.view.display_ongoing_tournament_list(self.load_ongoing_tournament())
         tournament_index = self.check_tournament_index_existance()
-        tournaments = self.load_ongoing_tournament()
-        for doc in range(len(tournaments)):
-            print(tournaments[doc].doc_id)
-        tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
-        tournament_name = tournament_dict["tournament_name"]
-        place = tournament_dict["place"]
-        dates = tournament_dict["dates"]
+        return tournament_index
+
+    def turn_playerlist_dict_into_object(self,playerlist):
         players = []
-        for tournament_player in tournament_dict["list_of_players"]:
+        for tournament_player in playerlist:
             player = self.load_player(tournament_player["db_player_index"] -1) #substract 1 to match document as list starting from 0
             player.set_tournament_index(tournament_player["tournament_player_index"])
             player.set_tournament_score(tournament_player["player_score"])
             players.append(player)
         playerlist = Playerlist(players)
+        return playerlist
+
+
+    def turn_saved_tournament_into_object(self,tournament_to_load_index):
+        tournament_index = tournament_to_load_index
+        tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
+        tournament_name = tournament_dict["tournament_name"]
+        place = tournament_dict["place"]
+        dates = tournament_dict["dates"]
+        playerlist = self.turn_playerlist_dict_into_object(tournament_dict["list_of_players"])
+        players = playerlist.playerlist
         time_control = tournament_dict["time_control"]
         description = tournament_dict["description"]
         number_of_round = tournament_dict["number_of_rounds"]
         list_of_rounds = self.load_tournament_list_of_rounds(tournament_dict,players)
         loaded_tournament = Tournament(tournament_name, place, dates, playerlist, time_control, description, number_of_round,list_of_rounds)
+        return loaded_tournament
+
+
+    def tournament_loading_menu(self):
+        tournament_index = self.get_tournament_to_load_index()
+        loaded_tournament = self.turn_saved_tournament_into_object(tournament_index)
         self.tournament = loaded_tournament
         self.current_tournament_index = tournament_index
         return self.tournament,self.current_tournament_index

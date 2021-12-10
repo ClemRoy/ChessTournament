@@ -120,6 +120,42 @@ class Views():
         player = input(prompt)
         return player
 
+    def incorrect_player_index(self, player_index):
+        """display index selection error"""
+        print(
+            f"Aucun joueur n'a l'index n°:{player_index}\n"
+            "Veuillez rentrer une nouvelle valeur\n"
+            )
+
+    def display_selected_players(self,players):
+        print("Index des joueurs déjà selectionés:\n")
+        print(players)
+
+    def player_selection_list_full(self,loaded_players):
+        print("Liste des joueurs complète!\n"
+        "Voici les joueurs selectionés:\n")
+        for player in loaded_players:
+            print(str(player)) #Substract one to match db as list starting from 0
+        print("souhaitez vous créer un tournois avec ces joueurs?\n")
+
+    def tournament_creation_confirmation(self, tournament):
+        print("Souhaitez vous créer un tournois avec les paramètres suivants?")
+        for key in tournament:
+            print( str(key) + " :" + str(tournament[key]) + "\n")
+
+    def tournament_creation_display(self,tournament_index):
+        print("Création du tournois")
+        print(f"Sauvegardé en tant que tournois n°{tournament_index}\n"
+                "Chargez le tournois pour intéragir avec\n")
+
+    def selected_players_display(self,playerlist):
+        print("Les joueurs selectionnés sont:\n")
+        print(playerlist + "\n")
+
+    def return_to_menu_confirmation(self):
+        print("Vous allez retourner au menu principal\n"
+        "Veuillez confirmer?`n")
+
     # Tournament display #
 
     def tournament_menu_display(self):

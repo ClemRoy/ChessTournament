@@ -90,13 +90,12 @@ class Match(Base):
 
     def serialize(self):
         """Turn match into dictionnary savable in TinyDb"""
-        if self.match_status == "Unplayed":
-            serialized_match = {
-                "first_player": self.first_player.tournament_player_index,
-                "second_player": self.second_player.tournament_player_index,
-                "match_status": self.match_status
-                }
-        elif self.match_status == "Finished":
+        serialized_match = {
+            "first_player": self.first_player.tournament_player_index,
+            "second_player": self.second_player.tournament_player_index,
+            "match_status": self.match_status
+            }
+        if self.match_status == "Finished":
             serialized_match = ([self.first_player.tournament_player_index, self.first_player_result],
                                 [self.second_player.tournament_player_index, self.second_player_result])
         return serialized_match
