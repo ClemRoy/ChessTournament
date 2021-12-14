@@ -33,6 +33,26 @@ class Tournament(Base):
             for round in range(self.number_of_round):
                 round_name = f"Round {round + 1}"
                 self.list_of_rounds.append(Round(round_name))
+        self.already_played_match = []
+        self.generate_played_match_list()
+
+    def generate_played_match_list(self):
+        if self.list_of_rounds[0].status == "Ungenerated":
+            pass
+        else:
+            for round_index in range(len(self.list_of_rounds)):
+                self.refresh_played_match_list(round_index)
+        print(self.already_played_match)
+
+    def refresh_played_match_list(self,round_index):
+        if self.list_of_rounds[round_index].status != "Ungenerated":
+            for match in range(len(self.list_of_rounds[round_index].match_list)):
+                played_match = self.list_of_rounds[round_index].match_list[match]
+                match_for_list = [played_match.first_player.tournament_player_index,
+                played_match.second_player.tournament_player_index]
+                match_for_list.sort()
+                if match_for_list not in self.already_played_match:
+                    self.already_played_match.append(match_for_list)
 
     def serialize(self):
         """transform tournament into dictionary savable in Tinydb"""
