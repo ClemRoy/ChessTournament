@@ -56,10 +56,12 @@ class Playerlist(Base):
     def get_player_list_score(self):
         """Display the list of tournament player by tournament score"""
         sorted_by_tourn_score = self.sort_playerlist_by_score_and_rank()
-        liste = "Liste des joueurs par index du tournois: \n"
-        for player in sorted_by_tourn_score:
-            liste += "\n" + str(player) + "\n"
-        return liste
+        return sorted_by_tourn_score
+
+    def get_player_list_index(self):
+        """Display the list of tournament player by tournament index"""
+        sorted_by_tourn_index = sorted(self.playerlist, key=lambda player: player.tournament_player_index)
+        return sorted_by_tourn_index
 
     def get_player_list(self):
         """Display the list of tournament player by tournament index"""

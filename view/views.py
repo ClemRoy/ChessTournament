@@ -65,9 +65,17 @@ class Views():
             )
             print(display)
 
+    def no_tournament_at_index(self,tournament_index):
+        print(f"Aucun tournois n'a l'index n°:{tournament_index}\n"
+            "Veuillez rentrer une nouvelle valeur\n")
+
     def no_ongoing_tournament(self):
         """Print a message if no ongoing tournament in database"""
         print("Il n'y a pas de tournois en cours.\n")
+
+    def goodbye(self):
+        """Print an exist message"""
+        print("Vous quittez le programme,au revoir")
 
     # Input to load tournament #
 
@@ -93,9 +101,14 @@ class Views():
 
     def ask_for_date(self):
         """input for tournament date"""
-        prompt = ("Veuillez indiquer la date de début du Tournois\n")
+        prompt = ("Veuillez indiquer la date de début du Tournois\n"
+                "La date doit être au format jj/mm/aa\n")
         date = input(prompt)
         return date
+
+    def incorrect_date_format(self):
+        print("Vous la date que vous avez rentré n'est pas correcte;\n"
+            "Elle doit être au format jj/mm/aa")
 
     def ask_time_controller(self):
         """input for time controller setting """
@@ -119,6 +132,10 @@ class Views():
         prompt = "Veuillez rentrer le chiffre correspondant a l'index d'un joueur\n"
         player = input(prompt)
         return player
+
+    def already_selected_player_error(self):
+        print("Le joueur est déjà présent dans la liste,veuillez ajouter un autre joueur \n")
+
 
     def incorrect_player_index(self, player_index):
         """display index selection error"""
@@ -182,6 +199,12 @@ class Views():
         )
         print(prompt)
 
+    def display_player_list(self,playerlist_sorted):
+        liste = "Liste des joueurs par index du tournois: \n"
+        for player in playerlist_sorted:
+            liste += "\n" + str(player) + "\n"
+        print(liste)
+
     def display_round_match_list(self, round):
         """print the list of matchs in a round"""
         for match in range(len(round.match_list)):
@@ -240,6 +263,14 @@ class Views():
             "pressez Y pour Oui,N pour non\n"
         )
 
+    def error_match_list_not_generated(self):
+        print("Les pairs n'ont pas encore été générée,"
+                        " Veuillez choisir l'option 2")
+
+    def error_match_list_already_generated(self):
+        print("Les pair de joueurs ont déjà été généré,"
+            "Vous pouvez démarrer le round en préssant l'option 3 dans le menu du round")
+
     def error_start_no_match_list(self):
         """error message for trying to start a round which match list is not generated yet"""
         print("Vous ne pouvez pas démarrer ce round parce que les matchs n'ont pas encore été générés\n")
@@ -297,7 +328,41 @@ class Views():
 
     # Related to data display #
 
+
     def print_player_index_and_name(self, name, index):
         """display players name and index +1 to compensate for conversion of db into list """
-        index = f"index du joueur: {index + 1},nom :" + name
+        index = f"index du joueur: {index + 1},nom :" + name + "\n"
         print(index)
+
+    # New player creation #
+
+    def ask_for_family_name(self):
+        """ask for a player family name"""
+        prompt = ("Veuillez rentrer le nom de famille du joueur?\n")
+        family_name = input(prompt)
+        return family_name
+
+    def ask_for_first_name(self):
+        """ask for a player family name"""
+        prompt = ("Veuillez rentrer le prénom du joueur?\n")
+        first_name = input(prompt)
+        return first_name
+
+
+    def ask_for_gender(self):
+        prompt = ("Veuillez rentrer M pour un homme ou F pour une femme\n")
+        gender = input(prompt)
+        if gender.lower() not in ["m","f"]:
+            return self.ask_for_gender()
+        else:
+            return gender
+
+    def ask_for_rank(self):
+        prompt = ("Veuillez rentrer le rang du joueur\n")
+        rank = input(prompt)
+        return rank
+
+    def player_created(self, player_dict, player_index):
+        first_name = player_dict["first_name"]
+        family_name = player_dict["family_name"]
+        print(f"Le joueur {first_name} {family_name} a été sauvegardé a l'index {player_index} \n")
