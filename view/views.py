@@ -22,16 +22,17 @@ class Views():
             )
 
     def confirmation(self):
-        """Ask user for a confirmation before sensitive actions"""
+        """Ask user for a confirmation before sensitive actions
+        return y for Yes,n for No"""
         prompt = "Tapez 'Y' pour poursuivre,'N' pour abandonner\n"
         choice = input(prompt).lower()
-        if choice == 'y':
-            return choice
-        elif choice == "n":
-            return choice
+        if choice.lower() == 'y':
+            return choice.lower()
+        elif choice.lower() == "n":
+            return choice.lower()
         else:
             print("Veuillez répondre par Y pour oui ou N pour non\n")
-            self.confirmation()
+            return self.confirmation()
 
     # Main menu display #
 
@@ -50,8 +51,10 @@ class Views():
         print(
             "\n --Base de donnée--"
             "\n1.Ajouter un joueur"
-            "\n2.Génerer un rapport"
-            "\n3.Retour au menu\n"
+            "\n2.Modifier le classement des joueurs"
+            "\n3.Corriger les données"
+            "\n4.Génerer un rapport"
+            "\n5.Retour au menu\n"
         )
 
     def display_ongoing_tournament_list(self, ongoing_tournament_db):
@@ -72,6 +75,7 @@ class Views():
     def no_ongoing_tournament(self):
         """Print a message if no ongoing tournament in database"""
         print("Il n'y a pas de tournois en cours.\n")
+
 
     def goodbye(self):
         """Print an exist message"""
@@ -106,9 +110,28 @@ class Views():
         date = input(prompt)
         return date
 
+    def ask_for_another_date(self):
+        print("Souhaitez vous ajouter une autre date?")
+        prompt = ("Veuillez répondre par Y pour oui ou N pour non\n ")
+        answer = input(prompt)
+        return answer
+
     def incorrect_date_format(self):
         print("Vous la date que vous avez rentré n'est pas correcte;\n"
             "Elle doit être au format jj/mm/aa")
+
+    def already_added_date(self):
+        print("Cette date a déjà été ajoutée,veuillez en choisir une autre.\n")
+
+    def change_number_of_rounds(self):
+        print(
+            "Souhaitez vous changer le nombre de rounds?\n"
+            "Si vous répondez non,le nombre de tour sera réglé sur4"
+        )
+        return self.confirmation()
+
+    def give_round_number(self):
+        print("Vous pouvez rentrer le nombre de tours que vous désirer.")
 
     def ask_time_controller(self):
         """input for time controller setting """
@@ -331,7 +354,7 @@ class Views():
 
     def print_player_index_and_name(self, name, index):
         """display players name and index +1 to compensate for conversion of db into list """
-        index = f"index du joueur: {index + 1},nom :" + name + "\n"
+        index = f"index du joueur: {index + 1},nom :" + name + "."
         print(index)
 
     # New player creation #
@@ -350,6 +373,7 @@ class Views():
 
 
     def ask_for_gender(self):
+        """ask for a player gender"""
         prompt = ("Veuillez rentrer M pour un homme ou F pour une femme\n")
         gender = input(prompt)
         if gender.lower() not in ["m","f"]:
@@ -358,11 +382,169 @@ class Views():
             return gender
 
     def ask_for_rank(self):
+        """ask for player rank"""
         prompt = ("Veuillez rentrer le rang du joueur\n")
         rank = input(prompt)
         return rank
 
+    def player_creation_confirmation(self,player):
+        print("Vous vous appretez a créer le joueur suivant:\n")
+        print(player)
+
     def player_created(self, player_dict, player_index):
+        """Display a message showing the player was saved at which index"""
         first_name = player_dict["first_name"]
         family_name = player_dict["family_name"]
         print(f"Le joueur {first_name} {family_name} a été sauvegardé a l'index {player_index} \n")
+
+    def translate_gender(self,gender):
+        if gender == "Male":
+            return "Homme"
+        elif gender == "Female":
+            return "Femme"
+
+    def turn_player_dict_into_string(self,player_dict):
+        first_name = player_dict["first_name"]
+        family_name = player_dict["family_name"]
+        birthdate = player_dict["birth_date"]
+        gender = self.translate_gender(player_dict["gender"])
+        rank = player_dict["rank"]
+        index = player_dict.doc_id
+        player_string = (f"Nom: {family_name}, Prenom: {first_name}, "
+                        f"Date de naissance: {birthdate}, Genre: {gender}, "
+                        f"Rang: {rank}, Index: {index}.")
+        return player_string
+
+    def display_playerlist_database(self,player_list, alphabetic=True):
+        if alphabetic == True:
+            print("Liste des joueurs dans l'ordre alphabétique:\n")
+        elif alphabetic == False:
+            print("liste des joueurs par rangs:\n")
+        for player in player_list:
+            print(self.turn_player_dict_into_string(player))
+
+    def tournament_date_display(self,tournament_dates):
+        if len(tournament_dates) == 1:
+            return tournament_dates[0]
+        elif len(tournament_dates) > 1:
+            display_string = f"du {tournament_dates[0]} au {tournament_dates[-1]}"
+            return display_string
+
+    def display_tournament_list(self,tournament_list,ongoing=True):
+        if ongoing == True:
+            print("Liste des Tournois en cours:\n")
+        elif ongoing == False:
+            print("Liste des Tournois terminés:\n")
+        for tournament in tournament_list:
+            tournament_name = tournament["tournament_name"]
+            tournament_place = tournament["place"]
+            tournament_dates = self.tournament_date_display(tournament["dates"])
+            tournament_time_control = tournament["time_control"]
+            tournament_number_round = tournament["number_of_rounds"]
+            tournament_descr = tournament["description"]
+            tournament_string = (f"Nom du tournois: {tournament_name}, Date: {tournament_dates}, "
+                                f"Localisation: {tournament_place}, Contrôle du temps: {tournament_time_control}, "
+                                f"Nombre de rounds: {tournament_number_round}.\n"
+                                f"Index du tournois dans sa base de donnée: {tournament.doc_id}\n"
+                                f"Déscription du tournois: {tournament_descr}\n")
+            print(tournament_string)
+
+
+    def select_tournament(self):
+        print("Veuillez rentrer l'index du tournois que vous souhaitez modifier.\n")
+
+    def incorrect_tournament_index(self,index):
+        print(
+            f"Aucun tourois n'a l'index n°:{index}\n"
+            "Veuillez rentrer une nouvelle valeur\n"
+        )
+
+    def selected_player_confirmation(self,player_dict):
+        print("Vous vous appretez a modifier les données du joueur suivant:\n")
+        print(self.turn_player_dict_into_string(player_dict))
+        return self.confirmation()    
+
+    def translate_key_for_print(self,value):
+        if value == "family_name":
+            return "le nom de famille"
+        elif value == "first_name":
+            return "le prénom"
+        elif value == "birth_date":
+            return "la date de naissance"
+        elif value == "gender":
+            return "le genre"
+        elif value == "rank":
+            return "le rang"
+
+    def change_value_confirmation(self,player_dict,value_to_change,new_value):
+        player_name = player_dict["family_name"] + " " + player_dict["first_name"]
+        player_old_value = player_dict[value_to_change]
+        value_for_display = self.translate_key_for_print(value_to_change)
+        print(f"Vous allez changer {value_for_display} de {player_name} de {player_old_value} à {new_value}")
+        return self.confirmation()
+
+    def translate_tournament_key_for_print(self,value):
+        if value == "tournament_name":
+            return "le nom du tournois"
+        elif value == "place":
+            return "la localisation du tournois"
+        elif value == "dates":
+            return "les dates du tournois"
+
+    def change_value_confirmation_tournament(self,tournament_dict,value_to_change,new_value):
+        tournament_name = tournament_dict["tournament_name"]
+        player_old_value = tournament_dict[value_to_change]
+        value_for_display = self.translate_tournament_key_for_print(value_to_change)
+        print(f"Vous allez changer {value_for_display} de {tournament_name} de {player_old_value} à {new_value}")
+        return self.confirmation()
+
+    def change_data_main_selection(self):
+            print(
+            "\n Que souhaitez vous modifier?"
+            "\n1.Un joueur"
+            "\n2.Un tournois en cours"
+            "\n3.Un tournois fini"
+            "\n4.Retourner au menu des données"
+        )
+
+    def change_data_player_value_selection(self):
+        print(
+            "\nQuel valeur souhaitez vous modifier?\n"
+            "1.Nom de famille\n"
+            "2.Prénom\n"
+            "3.Date de naissance\n"
+            "4.Genre\n"
+            "5.Rang\n"
+            "6.Retour au menu des données\n"
+        )
+
+    def empty_database(self):
+        print("La base de donnée est vide.")
+        
+    def display_report_generator_menu(self):
+        print(
+            "\n -Générateur de rapports-"
+            "\n1.Générer un rapport sur les joueurs"
+            "\n2.Générer un rapport sur les tournois"
+            "\n3.Retourner au menu des données"
+        )
+
+    def player_report_selector(self):
+        print(
+            "\n -Générateur de rapport sur les joueurs-"
+            "\n1.Alphabétique"
+            "\n2.Par rang"
+        )
+
+    def change_data_tournament_value_selection(self):
+        print(
+            "\nQuel valeur souhaitez vous modifier?\n"
+            "1.Nom du tournois\n"
+            "2.Localisation\n"
+            "3.Dates\n"
+            "4.Retour au menu des données\n"
+        )
+
+    def change_date_warning(self):
+        print("Attention,vous allez remplacer les anciennes dates par une nouvelle liste de dates\n"
+                "les anciennes seront éffacées.\n")

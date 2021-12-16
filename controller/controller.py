@@ -6,7 +6,6 @@ from pathlib import Path
 from tinydb import TinyDB
 from tinydb.queries import Query
 from tinydb.table import Document
-from tinydb.utils import V
 from model.player import Player
 from model.playerlist import Playerlist
 from model.match import Match
@@ -32,7 +31,7 @@ class Controller:
     DATAFOLDER = Path("Data")
     db = TinyDB( DATAFOLDER/'database.json')
     player_db = db.table('players')
-    finished_tour_namentdb = db.table('finished_tournament')
+    finished_tournamentdb = db.table('finished_tournament')
     ongoing_tournament_db = db.table("ongoing_tournament")
 
     ###function to launch the program###
@@ -52,13 +51,14 @@ class Controller:
         return True
 
     def check_date_input(self, date):
-            try:
-                datetime.datetime.strptime(date, "%d/%m/%y")
-            except ValueError:
-                self.view.incorrect_date_format()
-                return False
-            else:
-                return True
+        """return true if the given input match  the date format: JJ/MM/AA"""
+        try:
+            datetime.datetime.strptime(date, "%d/%m/%y")
+        except ValueError:
+            self.view.incorrect_date_format()
+            return False
+        else:
+            return True
 
 
     ### Save related function ###
@@ -105,7 +105,7 @@ class Controller:
         tournament_index = len(self.load_finished_tournament()) + 1
         tournament_to_save = self.ready_tournament_for_save(tournament)
         self.ongoing_tournament_db.remove(doc_ids=[self.current_tournament_index])
-        self.finished_tour_namentdb.insert(tournament_to_save)
+        self.finished_tournamentdb.insert(tournament_to_save)
         self.view.tournament_is_over(tournament_index)
         self.main_menu()
 
@@ -121,7 +121,7 @@ class Controller:
 
     def load_finished_tournament(self):
         """return finished tournaments as a list"""
-        return self.finished_tour_namentdb.all()
+        return self.finished_tournamentdb.all()
 
     def get_player_info_value(self,player_key,value_key):
         """Turn a player key from database.json into the value of the player info
@@ -154,8 +154,8 @@ class Controller:
         for index in range(len(self.load_player_db())):
             self.view.print_player_index_and_name(self.load_player(index).give_full_name(),index)
 
- ##Main Menu##
-    ###Main menu interactions###
+ # Main Menu #
+    # Main menu interactions #
 
     def main_menu(self):
         """Display main menu"""
@@ -177,29 +177,68 @@ class Controller:
                 self.view.incorrect_input()
                 self.main_menu()
 
-    ### Function relatives to creating a tournament in the menu###
+    # Function relatives to creating a tournament in the menu #
 
     def get_valid_date(self):
+        """ask input until it is given a valid date"""
         date = self.view.ask_for_date()
         if self.check_date_input(date):
             return date
         else:
             return self.get_valid_date()
 
+    def ask_for_dates(self):
+        """Get a first date,then ask other to add as many as he want before
+        returning a date list"""
+        date_list = []
+        date_list.append(self.get_valid_date())
+        answer = self.view.ask_for_another_date()
+        if answer not in ["y","n"]:
+            self.view.incorrect_input()
+            answer = self.view.ask_for_another_date()
+        else:
+            while answer == "y":
+                new_date = self.get_valid_date()
+                if new_date not in date_list:
+                    date_list.append(new_date)
+                    answer = self.view.ask_for_another_date()
+                elif new_date in date_list:
+                    self.view.already_added_date()
+                    answer = self.view.ask_for_another_date()
+            else:
+                return date_list
+
+    def set_number_of_round(self):
+        answer = self.view.change_number_of_rounds()
+        if answer == "n":
+            return 4
+        elif answer == "y":
+            self.view.give_round_number()
+            round_number = self.view.ask_for_input()
+            while not self.check_input_type(round_number):
+                round_number = self.view.ask_for_input()
+            else:
+                return int(round_number)
+
     def set_time_controller(self):
         """Get input for time controller setting"""
         time = True
         while time:
             time = self.view.ask_time_controller()
-            if time == "1":
-                time = "Bullet"
-            elif time == "2":
-                time = "Blitz"
-            elif time == "3":
-                time = "Coup rapide"
+            if self.check_input_type(time):
+                if int(time) in [1,2,3]:
+                    if time == "1":
+                        time = "Bullet"
+                    elif time == "2":
+                        time = "Blitz"
+                    elif time == "3":
+                        time = "Coup rapide"
+                else:
+                    self.view.incorrect_input()
+                    return self.set_time_controller()
             else:
                 self.view.incorrect_input()
-                self.set_time_controller()
+                return self.set_time_controller()
             return time
 
     def check_player_index_existance(self):
@@ -209,11 +248,11 @@ class Controller:
         if self.check_input_type(player_index):
             if int(player_index) == 0 or  int(player_index) > len(self.load_player_db()):
                 self.view.incorrect_player_index(player_index)
-                player_index = self.check_player_index_existance()
+                return self.check_player_index_existance()
             else:
                 return int(player_index)
         else:
-            player_index = self.check_player_index_existance()
+            return self.check_player_index_existance()
 
     def add_player(self):
         """establish the tournament playerlist"""
@@ -231,12 +270,14 @@ class Controller:
         return players
 
     def load_players(self,players):
+        """turn the players from database into object"""
         loaded_players = []
         for player in players:
             loaded_players.append(self.load_player(player -1)) #Substract one to match db as list starting from 0
         return loaded_players
 
     def initialize_players(self,loaded_players):
+        """Set players tournament values when recreated from database"""
         player_to_initialize = loaded_players
         tournament_player_index = 1
         for loaded_player in player_to_initialize:
@@ -259,16 +300,21 @@ class Controller:
             self.get_players()
 
     def get_tournament_info(self):
+        """get the necessary input to create a tournament"""
         tournament = {}
         tournament["name"] = self.view.ask_for_tournament_name()
         tournament["place"] = self.view.ask_for_place()
-        tournament["date"] = self.get_valid_date()
+        tournament["date"] = self.ask_for_dates()
         tournament["players"] = self.get_players()
         tournament["time"] = self.set_time_controller()
-        tournament["description"] = self.view.ask_for_description()
+        tournament_descr = []
+        tournament_descr.append(self.view.ask_for_description())
+        tournament["description"] = tournament_descr
+        tournament["number_of_rounds"] = self.set_number_of_round()
         return tournament
 
     def turn_tourn_dict_into_object(self, tournament_dict):
+        """Turn a tournament as dict into an object"""
         tournament = tournament_dict
         new_tournament = Tournament(
                 tournament["name"],
@@ -277,10 +323,12 @@ class Controller:
                 tournament["players"],
                 tournament["time"],
                 tournament["description"],
+                tournament["number_of_rounds"]
                 )
         return new_tournament
 
     def save_new_tournament(self, tournament_dict):
+        """check free index and save the tournament at the first unoccupied index"""
         saved_tournament_index_list = []
         for document in self.load_ongoing_tournament():
             saved_tournament_index = document.doc_id
@@ -295,6 +343,8 @@ class Controller:
                 self.main_menu()
 
     def create_tournament(self):
+        """gather necessary info to create a tournament,display a summary and ask for confirmation
+        before creating it"""
         tournament_dict = self.get_tournament_info()
         self.view.tournament_creation_confirmation(tournament_dict)
         confirmation = self.view.confirmation()
@@ -311,6 +361,7 @@ class Controller:
     ###Relative to loading an ongoing tournament"""
 
     def get_tournament_to_load_index(self):
+        """display a list of ongoing tournament the user can load"""
         if self.load_ongoing_tournament() == []:
             self.view.no_ongoing_tournament()
             self.main_menu()
@@ -319,6 +370,7 @@ class Controller:
         return tournament_index
 
     def turn_playerlist_dict_into_object(self,playerlist):
+        """Turn a list of players dictionnary into a playerlist object"""
         players = []
         for tournament_player in playerlist:
             player = self.load_player(tournament_player["db_player_index"] -1) #substract 1 to match document as list starting from 0
@@ -330,6 +382,7 @@ class Controller:
 
 
     def turn_saved_tournament_into_object(self,tournament_to_load_index):
+        """Turn tournament saved into ongoing tournament DB into an object"""
         tournament_index = tournament_to_load_index
         tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
         tournament_name = tournament_dict["tournament_name"]
@@ -346,6 +399,8 @@ class Controller:
 
 
     def tournament_loading_menu(self):
+        """ask input about tournament to load then recreate it as
+         the tournament object beeing manipulated by the controller"""
         tournament_index = self.get_tournament_to_load_index()
         loaded_tournament = self.turn_saved_tournament_into_object(tournament_index)
         self.tournament = loaded_tournament
@@ -354,6 +409,7 @@ class Controller:
 
 
     def link_player_from_finished_match_with_object(self,match,match_list_dict,generated_players_sorted):
+        """Link players from finished match from previous rounds match with their tournament_player_index"""
         for player in range(len(generated_players_sorted)):
             if generated_players_sorted[player].tournament_player_index == match_list_dict[f"match n{match + 1}"][0][0]:
                 first_player = generated_players_sorted[player]
@@ -363,6 +419,7 @@ class Controller:
         return [first_player,second_player]
 
     def link_player_from_match_with_object(self,match,match_list_dict,generated_players_sorted):
+        """Link players from unfinished match from previous rounds match with their tournament_player_index"""
         for player in range(len(generated_players_sorted)):
             if generated_players_sorted[player].tournament_player_index == match_list_dict[f"match n{match + 1}"]["first_player"]:
                 first_player = generated_players_sorted[player]
@@ -373,6 +430,7 @@ class Controller:
 
                     
     def set_finished_match_result(self,match,match_object,match_list_dict):
+        """set the match result when it is recreated as an object"""
         if match_list_dict[f"match n{match + 1}"][0][1] == "Victory":
             match_object.set_result(1)
         elif match_list_dict[f"match n{match + 1}"][0][1] == "Defeat":
@@ -381,18 +439,21 @@ class Controller:
             match_object.set_result(3)
 
     def load_match_finished(self,match,match_list_dict,generated_players_sorted):
+        """turn finished match into object with it's result"""
         players = self.link_player_from_finished_match_with_object(match,match_list_dict,generated_players_sorted)
         match_object = Match(players[0],players[1])
         self.set_finished_match_result(match, match_object, match_list_dict)
         return match_object
 
     def load_match_started(self,match,match_list_dict,generated_players_sorted):
+        """turn started match into an object"""
         players = self.link_player_from_match_with_object(match,match_list_dict,generated_players_sorted)
         match_object = Match(players[0],players[1])
         match_object.start_match()
         return match_object
 
     def load_match_generated(self,match,match_list_dict,generated_players_sorted):
+        """turn generated match into an object"""
         players = self.link_player_from_match_with_object(match,match_list_dict,generated_players_sorted)
         match_object = Match(players[0],players[1])
         return match_object
@@ -417,6 +478,7 @@ class Controller:
         return match_list
 
     def load_finished_round(self,round_dict,generated_players):
+        """turn finished round into an object"""
         round = round_dict
         round_object = Round(round["round_name"], "Finished",self.load_match_list(round,generated_players))
         round_object.set_start_time(round["round_start_time"])
@@ -424,17 +486,20 @@ class Controller:
         return round_object
 
     def load_started_round(self,round_dict,generated_players):
+        """turn started round into an object"""
         round = round_dict
         round_object = Round(round["round_name"], "Started",self.load_match_list(round,generated_players))
         round_object.set_start_time(round["round_start_time"])
         return round_object
 
     def load_generated_round(self,round_dict,generated_players):
+        """turn generated round into an object"""
         round = round_dict
         round_object = Round(round["round_name"], "Generated",self.load_match_list(round,generated_players))
         return round_object
 
     def load_tournament_list_of_rounds(self,tournament_dict,generated_players):
+        """turn all rounds of a round list into objects"""
         list_of_rounds = []
         rounds = tournament_dict["list_of_rounds"]
         for round in range(len(rounds)):
@@ -467,6 +532,7 @@ class Controller:
  ###Tournament controller###
 
     def tournament_menu(self):
+        """Display the menu relative to the ongoing tournament"""
         answer = True
         while answer:
             self.view.tournament_menu_display()
@@ -488,6 +554,7 @@ class Controller:
                 self.tournament_menu()
 
     def display_players(self):
+        """Display a list of current tournament players"""
         answer = True
         while answer:
             answer = self.view.player_list_display_choice()
@@ -521,6 +588,7 @@ class Controller:
         self.tournament.refresh_played_match_list(0)
 
     def round_menu(self,round_index):
+        """display menu of current round"""
         answer = True
         while answer:
             self.view.round_menu_display(round_index)
@@ -549,6 +617,7 @@ class Controller:
                 self.round_menu(round_index)
 
     def launch_matchmacking(self,round_index):
+        """start matchmaking according to round"""
         if self.tournament.list_of_rounds[round_index].status != "Ungenerated":
             self.view.error_match_list_already_generated()
         else:
@@ -565,6 +634,7 @@ class Controller:
         return [el.tournament_player_index for el in new_list]
 
     def get_duo_for_first_player(self, sorted_players):
+        """Pairs players who have never played together except if only two players are left to be selected"""
         if len(sorted_players) < 2:
             pass
         elif len(sorted_players) == 2 and  not self._did_players_never_played(sorted_players[0], sorted_players[1]):
@@ -591,6 +661,7 @@ class Controller:
 
 
     def match_tournament_index_with_player_object(self,tournament_index):
+        """find correspondance between """
         for player in self.tournament.playerlist.playerlist:
             if player.tournament_player_index == tournament_index:
                 return player
@@ -614,8 +685,8 @@ class Controller:
         return next_matchs_dict
 
     def match_making(self,round_index):
-        """generate a list of previous matchs,get a list of players
-         indexs sorted from the strongest to the weakest"""
+        """get a list of players indexs sorted from the strongest to the weakest
+        then pairs them up while avoiding to replay previous match"""
         next_round_matchs = []
         round_playerlist_index = self.get_sorted_players_idx()
         next_matchs_dict = self.get_match_dict(round_playerlist_index)
@@ -731,33 +802,83 @@ class Controller:
 
     def data_menu(self):
         """Display menu to interact with data"""
-        answer = True
-        while answer:
-            self.view.data_menu_display()
-            answer = self.view.ask_for_input()
-            if answer == "1":
+        self.view.data_menu_display()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3,4,5]:
+                self.view.incorrect_input()
+                return self.data_menu()
+            elif answer == "1":
                 self.create_new_player()
             elif answer == "2":
-                pass
+                self.select_player_confirmed(rank=True)
             elif answer == "3":
+                self.change_data_menu()
+            elif answer == "4":
+                self.report_generator_menu()                
+            elif answer == "5":
                 self.main_menu()
-            else:
+        else:
+            return self.data_menu()
+
+    def change_data_menu(self):
+        self.view.change_data_main_selection()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3,4]:
                 self.view.incorrect_input()
+                return self.change_data_menu()
+            elif answer == "1":
+                self.select_player_confirmed()
+            elif answer == "2":
+                self.select_tournament_for_modification(1)
+            elif answer == "3":
+                self.select_tournament_for_modification(2)
+            elif answer == "4":
                 self.data_menu()
+        else:
+            return self.change_data_menu()
+
+    def player_modification_menu(self, player):
+        """ask input to select value to change"""
+        self.view.change_data_player_value_selection()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3,4,5,6]:
+                self.view.incorrect_input()
+                return self.player_modification_menu(player)
+            elif answer == "1":
+                self.change_player_value(player,"family_name")
+            elif answer == "2":
+                self.change_player_value(player,"first_name")
+            elif answer == "3":
+                self.change_player_value(player,"birth_date")
+            elif answer == "4":
+               self.change_player_value(player,"gender")
+            elif answer == "5":
+                self.change_player_value(player,"rank")
+            elif answer == "6":
+                self.data_menu()
+        else:
+            return self.player_modification_menu(player)
 
     def family_name(self):
+        """ask for family name input to create new player"""
         family_name = self.view.ask_for_family_name()
         return family_name
 
     def first_name(self):
+        """ask for first name input to create new player"""
         first_name = self.view.ask_for_first_name()
         return first_name
 
     def birthdate(self):
+        """ask for a valid birth date input to create new player"""
         date = self.get_valid_date()
         return date
 
     def ask_for_gender(self):
+        """ask for player gender input to create new player"""
         gender = self.view.ask_for_gender()
         if gender.lower() == "m":
             return "Male"
@@ -765,26 +886,35 @@ class Controller:
             return "Female"
 
     def ask_for_rank(self):
+        """ask for player rank input to create new player"""
         rank = self.view.ask_for_rank()
-        while not self.check_input_type(rank):
-            self.view.incorrect_input()
-            rank = self.view.ask_for_rank()
+        if not self.check_input_type(rank):
+            return self.ask_for_rank()
         else:
-            return rank
+            return int(rank)
+
+    def create_player_confirmation(self,player):
+        self.view.player_creation_confirmation(str(player))
+        answer = self.view.confirmation()
+        if answer == "y":
+            new_player_dict = player.serialize()
+            self.save_new_player(new_player_dict)
+            self.data_menu()
+        elif answer == "n":
+            self.data_menu()
 
     def create_new_player(self):
+        """gather info to create a new player,then turn it into a dictionnary"""
         family_name = self.family_name()
         first_name = self.first_name()
         birhtdate = self.birthdate()
         gender = self.ask_for_gender()
         rank = self.ask_for_rank()
         new_player = Player(family_name, first_name, birhtdate, gender, rank)
-        new_player_dict = new_player.serialize()
-        self.save_new_player(new_player_dict)
-        self.data_menu()
+        self.create_player_confirmation(new_player)
         
-
     def save_new_player(self, player_dict):
+        """Get a player dict and save it at the first free index in player database"""
         saved_player_index_list = []
         for player in self.load_player_db():
             saved_player_index = player.doc_id
@@ -795,3 +925,180 @@ class Controller:
                 player_index = possible_index
                 self.view.player_created(player_dict, player_index)
                 self.player_db.upsert(Document(player_dict,doc_id=player_index))
+
+    def select_player_for_modification(self):
+        self.show_player_index_for_selection()
+        player = self.check_player_index_existance()
+        player = self.player_db.get(doc_id=player)
+        return player
+
+    def select_player_confirmed(self, rank=False):
+        player = self.select_player_for_modification()
+        confirmation = self.view.selected_player_confirmation(player)
+        if confirmation.lower() == "y":
+            if rank == False:
+                self.player_modification_menu(player)
+            elif rank == True:
+                self.change_player_value(player)
+        elif confirmation.lower() == "n":
+            self.data_menu()
+
+    def select_input_to_ask(self,value_to_change):
+        if value_to_change == "family_name":
+            return self.view.ask_for_family_name()
+        elif value_to_change == "first_name":
+            return self.view.ask_for_first_name()
+        elif value_to_change == "birth_date":
+            return self.get_valid_date()
+        elif value_to_change == "gender":
+            return self.ask_for_gender()
+        elif value_to_change == "rank":
+            return self.ask_for_rank()
+
+    def change_player_value(self,player,value_to_change="rank"):
+        new_value = self.select_input_to_ask(value_to_change)
+        answer = self.view.change_value_confirmation(player,value_to_change,new_value)
+        if answer == "y":
+            player[value_to_change] = new_value
+            self.player_db.upsert(Document(player, doc_id= player.doc_id))
+        elif answer == "n":
+            self.data_menu()
+
+    def select_tournament_for_modification(self,tourament_db_type):
+        if tourament_db_type == 1:
+            self.display_ongoing_tournament_database_chronological()
+        elif tourament_db_type == 2:
+            self.display_finished_tournament_database_chronoligcal()
+        tournament_id = self.check_tournament_existance(tourament_db_type)
+        if tourament_db_type == 1:
+            tournament_to_modify = self.ongoing_tournament_db.get(doc_id= tournament_id)
+        elif tourament_db_type == 2:
+            tournament_to_modify = self.finished_tournamentdb.get(doc_id= tournament_id)
+        self.tournament_modification_menu(tournament_to_modify,tourament_db_type)
+
+    def check_tournament_existance(self,tournament_db_type):
+        """take int from function and check if the int match
+        an index in player database,then return it if it does"""
+        if tournament_db_type == 1:
+            db_size = len(self.ongoing_tournament_db.all()) + 1
+        elif tournament_db_type == 2:
+            db_size = len(self.finished_tournamentdb.all()) +1 
+        self.view.select_tournament()
+        tournament_index = self.view.ask_for_input()
+        if self.check_input_type(tournament_index):
+            if int(tournament_index) == 0 or  int(tournament_index) > db_size:
+                self.view.incorrect_tournament_index(tournament_index)
+                return self.check_tournament_existance(tournament_db_type)
+            else:
+                return int(tournament_index)
+        else:
+            return self.check_tournament_existance(tournament_db_type)
+
+    def tournament_modification_menu(self, tournament,tourament_db_type):
+        """ask input to select value to change"""
+        self.view.change_data_tournament_value_selection()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3,4]:
+                self.view.incorrect_input()
+                return self.tournament_modification_menu(tournament)
+            elif answer == "1":
+                self.change_tournament_value_value(tournament,"tournament_name",tourament_db_type)
+            elif answer == "2":
+                self.change_tournament_value_value(tournament,"place",tourament_db_type)
+            elif answer == "3":
+                self.change_tournament_value_value(tournament,"dates",tourament_db_type)
+            elif answer == "4":
+               self.data_menu()
+        else:
+            return self.tournament_modification_menu(tournament)
+
+    def select_input_to_ask_tournament(self,value_to_change):
+        if value_to_change == "tournament_name":
+            return self.view.ask_for_tournament_name()
+        elif value_to_change == "place":
+            return self.view.ask_for_place()
+        elif value_to_change == "dates":
+            self.view.change_date_warning()
+            return self.ask_for_dates()
+
+    def change_tournament_value_value(self,tournament,value_to_change,tourament_db_type):
+        new_value = self.select_input_to_ask_tournament(value_to_change)
+        answer = self.view.change_value_confirmation_tournament(tournament,value_to_change,new_value)
+        if answer == "y":
+            tournament[value_to_change] = new_value
+            if tourament_db_type == 1:
+                self.ongoing_tournament_db.upsert(Document(tournament, doc_id= tournament.doc_id))
+            elif tourament_db_type ==2:
+                self.finished_tournamentdb.upsert(Document(tournament, doc_id= tournament.doc_id))
+        elif answer == "n":
+            self.data_menu()
+
+
+    def report_generator_menu(self):
+        self.view.display_report_generator_menu()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3]:
+                self.view.incorrect_input()
+                return self.report_generator_menu()
+            elif answer == "1":
+                self.report_generator_players()
+            elif answer == "2":
+                pass
+            elif answer == "3":
+                self.data_menu()
+        else:
+            return self.report_generator_menu()
+
+    def report_generator_players(self):
+        self.view.player_report_selector()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2]:
+                self.view.incorrect_input()
+                return self.report_generator_players
+            elif answer == "1":
+                self.display_player_databse_aplhabeticly()
+                self.data_menu()
+            elif answer == "2":
+                self.display_player_databse_by_rank()
+                self.data_menu()
+        else:
+            return self.report_generator_players()
+
+    def display_player_databse_aplhabeticly(self):
+        """sort playerDB alphabetically and print it"""
+        playerlist = self.load_player_db()
+        playerlist.sort(key=lambda player: (player["family_name"], player["first_name"]))
+        self.view.display_playerlist_database(playerlist)
+
+    def display_player_databse_by_rank(self):
+        """sort playerDB by rank and print it"""
+        playerlist = self.load_player_db()
+        for player in playerlist:
+            rank_into_int = int(player["rank"])
+            player["rank"] = rank_into_int
+        playerlist.sort(key=lambda player: player["rank"], reverse=True)
+        self.view.display_playerlist_database(playerlist, alphabetic=False)
+
+    def sort_tournament_by_date(self,tournament_list):
+        """sort tournament DB by dates"""
+        tournament_list.sort(key=lambda tournament: datetime.datetime.strptime(tournament["dates"][0], "%d/%m/%y"))
+        return tournament_list
+
+    def display_ongoing_tournament_database_chronological(self):
+        """Display ongoing tounrmanet by chronological order"""
+        ongoing_tournament_list = self.sort_tournament_by_date(self.load_ongoing_tournament())
+        if ongoing_tournament_list == []:
+            self.view.empty_database()
+        else:
+            self.view.display_tournament_list(ongoing_tournament_list)
+
+    def display_finished_tournament_database_chronoligcal(self):
+        """display finished tournament DB by chronological order"""
+        finished_tournament_list = self.sort_tournament_by_date(self.load_finished_tournament())
+        if finished_tournament_list == []:
+            self.view.empty_database()
+        else:
+            self.view.display_tournament_list(finished_tournament_list,ongoing=False)

@@ -42,7 +42,6 @@ class Tournament(Base):
         else:
             for round_index in range(len(self.list_of_rounds)):
                 self.refresh_played_match_list(round_index)
-        print(self.already_played_match)
 
     def refresh_played_match_list(self,round_index):
         if self.list_of_rounds[round_index].status != "Ungenerated":
