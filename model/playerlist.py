@@ -35,6 +35,12 @@ class Playerlist(Base):
         new_player_list.sort(key=lambda player: (player.tournament_score, player.rank), reverse=True)
         return new_player_list
 
+    def sort_player_list_alphabeticly(self):
+        """return list of tournament player by alphabetical order"""
+        new_player_list = self.playerlist
+        new_player_list.sort(key=lambda player: (player.family_name, player.first_name))
+        return new_player_list
+
     def find_player_list_middle(self, list):
         """find the middle of the player list"""
         lenth = len(list)

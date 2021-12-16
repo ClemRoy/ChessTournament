@@ -302,9 +302,9 @@ class Controller:
     def get_tournament_info(self):
         """get the necessary input to create a tournament"""
         tournament = {}
-        tournament["name"] = self.view.ask_for_tournament_name()
+        tournament["tournament_name"] = self.view.ask_for_tournament_name()
         tournament["place"] = self.view.ask_for_place()
-        tournament["date"] = self.ask_for_dates()
+        tournament["dates"] = self.ask_for_dates()
         tournament["players"] = self.get_players()
         tournament["time"] = self.set_time_controller()
         tournament_descr = []
@@ -313,13 +313,13 @@ class Controller:
         tournament["number_of_rounds"] = self.set_number_of_round()
         return tournament
 
-    def turn_tourn_dict_into_object(self, tournament_dict):
+    def turn_new_tourn_dict_into_object(self, tournament_dict):
         """Turn a tournament as dict into an object"""
         tournament = tournament_dict
         new_tournament = Tournament(
-                tournament["name"],
+                tournament["tournament_name"],
                 tournament["place"],
-                tournament["date"],
+                tournament["dates"],
                 tournament["players"],
                 tournament["time"],
                 tournament["description"],
@@ -338,7 +338,7 @@ class Controller:
             if possible_index not in saved_tournament_index_list:
                 tournament_index = possible_index
                 self.view.tournament_creation_display(tournament_index)
-                new_tournament = self.turn_tourn_dict_into_object(tournament_dict)
+                new_tournament = self.turn_new_tourn_dict_into_object(tournament_dict)
                 self.save_ongoing_tournament(new_tournament,tournament_index)
                 self.main_menu()
 
@@ -381,10 +381,13 @@ class Controller:
         return playerlist
 
 
-    def turn_saved_tournament_into_object(self,tournament_to_load_index):
+    def turn_saved_tournament_into_object(self,tournament_to_load_index, ongoing=True):
         """Turn tournament saved into ongoing tournament DB into an object"""
         tournament_index = tournament_to_load_index
-        tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
+        if ongoing == True:
+            tournament_dict = self.ongoing_tournament_db.get(doc_id=tournament_index)
+        elif ongoing == False:
+            tournament_dict = self.finished_tournamentdb.get(doc_id=tournament_index)
         tournament_name = tournament_dict["tournament_name"]
         place = tournament_dict["place"]
         dates = tournament_dict["dates"]
@@ -1045,7 +1048,7 @@ class Controller:
             elif answer == "1":
                 self.report_generator_players()
             elif answer == "2":
-                pass
+                self.report_generator_tournament()
             elif answer == "3":
                 self.data_menu()
         else:
@@ -1057,7 +1060,7 @@ class Controller:
         if self.check_input_type(answer):
             if int(answer) not in [1,2]:
                 self.view.incorrect_input()
-                return self.report_generator_players
+                return self.report_generator_players()
             elif answer == "1":
                 self.display_player_databse_aplhabeticly()
                 self.data_menu()
@@ -1102,3 +1105,80 @@ class Controller:
             self.view.empty_database()
         else:
             self.view.display_tournament_list(finished_tournament_list,ongoing=False)
+
+    def report_generator_tournament(self):
+        self.view.tournament_report_selector()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3]:
+                self.view.incorrect_input()
+                return self.report_generator_tournament()
+            elif answer == "1":
+                self.display_ongoing_tournament_database_chronological()
+                self.display_finished_tournament_database_chronoligcal()
+                self.report_generator_tournament()
+            elif answer == "2":
+                self.report_generator_tournament_advanced()
+            elif answer == "3":
+                self.data_menu()
+        else:
+            return self.report_generator_players()
+
+    def report_generator_tournament_advanced(self):
+        self.view.tournament_report_db_selector()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2]:
+                self.view.incorrect_input()
+                return self.report_generator_tournament_advanced()
+            elif answer == "1":
+                self.advanced_report_tournament_selection(1)
+            elif answer == "2":
+                self.advanced_report_tournament_selection(2)
+        else:
+            return self.report_generator_tournament_advanced()
+
+    def advanced_report_tournament_selection(self,tournament_db_type):
+        print("i'm here")
+        if tournament_db_type == 1:
+            self.display_ongoing_tournament_database_chronological()
+        elif tournament_db_type == 2:
+            self.display_finished_tournament_database_chronoligcal()
+        tournament_id = self.check_tournament_existance(tournament_db_type)
+        if tournament_db_type == 1:
+            tournament_to_report = self.turn_saved_tournament_into_object(tournament_id)
+        elif tournament_db_type == 2:
+            tournament_to_report = self.turn_saved_tournament_into_object(tournament_id,ongoing=False)
+        self.avanced_report_selection(tournament_to_report)
+
+    def avanced_report_selection(self,tournament):
+        self.view.advanced_report_selection()
+        answer = self.view.ask_for_input()
+        if self.check_input_type(answer):
+            if int(answer) not in [1,2,3,4,5,6]:
+                self.view.incorrect_input()
+                return self.avanced_report_selection(tournament)
+            elif answer == "1":
+                playerlist_to_report = tournament.playerlist.sort_player_list_alphabeticly()
+                self.view.display_playerlist_report(playerlist_to_report,"alphabetical")
+                self.avanced_report_selection(tournament)
+            elif answer == "2":
+                playerlist_to_report = tournament.playerlist.sort_playerlist_by_rank()
+                playerlist_to_report.reverse()
+                self.view.display_playerlist_report(playerlist_to_report,"rank")
+                self.avanced_report_selection(tournament)
+            elif answer == "3":
+                playerlist_to_report = tournament.playerlist.sort_playerlist_by_score_and_rank()
+                self.view.display_playerlist_report(playerlist_to_report,"score")
+                self.avanced_report_selection(tournament)
+            elif answer == "4":
+                self.view.display_list_of_rounds_report(tournament.list_of_rounds)
+                self.avanced_report_selection(tournament)
+            elif answer == "5":
+                self.view.display_match_list_report(tournament.list_of_rounds)
+                self.avanced_report_selection(tournament)
+            elif answer == "6":
+                self.data_menu()
+        else:
+            self.avanced_report_selection(tournament)
+

@@ -1,7 +1,7 @@
 """Base view"""
 
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 class Views():
@@ -548,3 +548,103 @@ class Views():
     def change_date_warning(self):
         print("Attention,vous allez remplacer les anciennes dates par une nouvelle liste de dates\n"
                 "les anciennes seront éffacées.\n")
+
+    def tournament_report_selector(self):
+        print(
+            "\n -Générateur de rapport sur tournois-"
+            "\n1.Tout les tournois"
+            "\n2.Sélectionner un tournois pour obtenir un rapport spécifique"
+            "\n3.Retourner au menu des données"
+        )
+
+    def tournament_report_db_selector(self):
+        print(
+            "\nSouhaitez vous accéder a un tournois:"
+            "\n1.En cours"
+            "\n2.Fini"
+        )
+
+    def advanced_report_selection(self):
+        print(
+            "\nGénerez un rapport:"
+            "\n1.Des joueurs par ordre alphabétique"
+            "\n2.Des joueurs par classement"
+            "\n3.Des joueurs par score au tournois"
+            "\n4.De la liste des tours"
+            "\n5.De la liste des matchs"
+            "\n6.Retour au menu des données"
+            )
+
+    def display_playerlist_report(self,playerlist_sorted,display_type):
+        if display_type == "alphabetical":
+            display_type = "par ordre alphabétique"
+        elif display_type == "rank":
+            display_type = "par classement"
+        elif display_type == "score":
+            display_type = "par score au tournois"
+        liste = f"Liste des joueurs {display_type}: \n"
+        for player in playerlist_sorted:
+            liste += "\n" + str(player) + "\n"
+        print(liste)
+
+    def display__ungenerated_round(self,round):
+        display = (
+            f"\n{round.name}"
+            "\nLes pairs du round n'ont pas encore été générées"
+        )
+        print(display)
+
+    def display_generated_rounds(self,round):
+        display = (
+            f"\n{round.name}"
+            "Liste des matchs du round:"
+        )
+        for match in round.match_list:
+            display += "\n" + str(match)
+        print(display)
+
+    def display_started_rounds(self,round):
+        start_time = datetime.fromtimestamp(round.start_time)
+        display = (
+            f"\n{round.name}"
+            f"\nLe round a débuté le {start_time}"
+            "\nListe des matchs du round:"
+        )
+        for match in round.match_list:
+            display += "\n" + str(match)
+        print(display)
+
+    def display_finished_rounds(self,round):
+        start_time = datetime.fromtimestamp(round.start_time)
+        end_time = datetime.fromtimestamp(round.end_time)
+        elapsed_time_min = (timedelta(seconds=round.end_time - round.start_time))
+        display = (
+            f"\n{round.name}"
+            f"\nLe round a débuté le {start_time}"
+            f"\nIl a pris fin le {end_time}"
+            f"\nLe round a duré: {elapsed_time_min}"
+            "\nListe des matchs du round:"
+            )   
+        for match in round.match_list:
+            display += "\n" + str(match)
+        print(display)
+
+
+    def display_list_of_rounds_report(self,list_of_rounds):
+        for round in list_of_rounds:
+            if round.status == "Ungenerated":
+                self.display__ungenerated_round(round)
+            elif round.status == "Generated":
+                self.display_generated_rounds(round)
+            elif round.status == "Started":
+                self.display_started_rounds(round)
+            elif round.status == "Finished":
+                self.display_finished_rounds(round)
+
+    def display_match_list_report(self,list_of_rounds):
+        for round_index in range(len(list_of_rounds)):
+            print(f"Liste des matchs du {list_of_rounds[round_index].name}")
+            if list_of_rounds[round_index].status == "Ungenerated":
+                print("\nles matchs du tour n'ont pas encore été générés")
+            for match in range(len(list_of_rounds[round_index].match_list)):
+                print(str(list_of_rounds[round_index].match_list[match]))
