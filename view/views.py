@@ -68,14 +68,15 @@ class Views():
             )
             print(display)
 
-    def no_tournament_at_index(self,tournament_index):
-        print(f"Aucun tournois n'a l'index n°:{tournament_index}\n"
-            "Veuillez rentrer une nouvelle valeur\n")
+    def no_tournament_at_index(self, tournament_index):
+        print(
+            f"Aucun tournois n'a l'index n°:{tournament_index}\n"
+            "Veuillez rentrer une nouvelle valeur\n"
+                )
 
     def no_ongoing_tournament(self):
         """Print a message if no ongoing tournament in database"""
         print("Il n'y a pas de tournois en cours.\n")
-
 
     def goodbye(self):
         """Print an exist message"""
@@ -105,8 +106,10 @@ class Views():
 
     def ask_for_date(self):
         """input for tournament date"""
-        prompt = ("Veuillez indiquer la date de début du Tournois\n"
-                "La date doit être au format jj/mm/aa\n")
+        prompt = (
+            "Veuillez indiquer la date de début du Tournois\n"
+            "La date doit être au format jj/mm/aa\n"
+            )
         date = input(prompt)
         return date
 
@@ -117,8 +120,10 @@ class Views():
         return answer
 
     def incorrect_date_format(self):
-        print("Vous la date que vous avez rentré n'est pas correcte;\n"
-            "Elle doit être au format jj/mm/aa")
+        print(
+            "Vous la date que vous avez rentré n'est pas correcte;\n"
+            "Elle doit être au format jj/mm/aa"
+            )
 
     def already_added_date(self):
         print("Cette date a déjà été ajoutée,veuillez en choisir une autre.\n")
@@ -159,7 +164,6 @@ class Views():
     def already_selected_player_error(self):
         print("Le joueur est déjà présent dans la liste,veuillez ajouter un autre joueur \n")
 
-
     def incorrect_player_index(self, player_index):
         """display index selection error"""
         print(
@@ -167,34 +171,40 @@ class Views():
             "Veuillez rentrer une nouvelle valeur\n"
             )
 
-    def display_selected_players(self,players):
+    def display_selected_players(self, players):
         print("Index des joueurs déjà selectionés:\n")
         print(players)
 
-    def player_selection_list_full(self,loaded_players):
-        print("Liste des joueurs complète!\n"
-        "Voici les joueurs selectionés:\n")
+    def player_selection_list_full(self, loaded_players):
+        print(
+            "Liste des joueurs complète!\n"
+            "Voici les joueurs selectionés:\n"
+        )
         for player in loaded_players:
-            print(str(player)) #Substract one to match db as list starting from 0
+            print(str(player))  # Substract one to match db as list starting from 0
         print("souhaitez vous créer un tournois avec ces joueurs?\n")
 
     def tournament_creation_confirmation(self, tournament):
         print("Souhaitez vous créer un tournois avec les paramètres suivants?")
         for key in tournament:
-            print( str(key) + " :" + str(tournament[key]) + "\n")
+            print(str(key) + " :" + str(tournament[key]) + "\n")
 
-    def tournament_creation_display(self,tournament_index):
+    def tournament_creation_display(self, tournament_index):
         print("Création du tournois")
-        print(f"Sauvegardé en tant que tournois n°{tournament_index}\n"
-                "Chargez le tournois pour intéragir avec\n")
+        print(
+            f"Sauvegardé en tant que tournois n°{tournament_index}\n"
+            "Chargez le tournois pour intéragir avec\n"
+            )
 
-    def selected_players_display(self,playerlist):
+    def selected_players_display(self, playerlist):
         print("Les joueurs selectionnés sont:\n")
         print(playerlist + "\n")
 
     def return_to_menu_confirmation(self):
-        print("Vous allez retourner au menu principal\n"
-        "Veuillez confirmer?`n")
+        print(
+            "Vous allez retourner au menu principal\n"
+            "Veuillez confirmer?`n"
+            )
 
     # Tournament display #
 
@@ -222,7 +232,7 @@ class Views():
         )
         print(prompt)
 
-    def display_player_list(self,playerlist_sorted):
+    def display_player_list(self, playerlist_sorted):
         liste = "Liste des joueurs par index du tournois: \n"
         for player in playerlist_sorted:
             liste += "\n" + str(player) + "\n"
@@ -287,12 +297,16 @@ class Views():
         )
 
     def error_match_list_not_generated(self):
-        print("Les pairs n'ont pas encore été générée,"
-                        " Veuillez choisir l'option 2")
+        print(
+            "Les pairs n'ont pas encore été générée,"
+            " Veuillez choisir l'option 2"
+            )
 
     def error_match_list_already_generated(self):
-        print("Les pair de joueurs ont déjà été généré,"
-            "Vous pouvez démarrer le round en préssant l'option 3 dans le menu du round")
+        print(
+            "Les pair de joueurs ont déjà été généré,"
+            "Vous pouvez démarrer le round en préssant l'option 3 dans le menu du round"
+            )
 
     def error_start_no_match_list(self):
         """error message for trying to start a round which match list is not generated yet"""
@@ -351,7 +365,6 @@ class Views():
 
     # Related to data display #
 
-
     def print_player_index_and_name(self, name, index):
         """display players name and index +1 to compensate for conversion of db into list """
         index = f"index du joueur: {index + 1},nom :" + name + "."
@@ -371,12 +384,11 @@ class Views():
         first_name = input(prompt)
         return first_name
 
-
     def ask_for_gender(self):
         """ask for a player gender"""
         prompt = ("Veuillez rentrer M pour un homme ou F pour une femme\n")
         gender = input(prompt)
-        if gender.lower() not in ["m","f"]:
+        if gender.lower() not in ["m", "f"]:
             return self.ask_for_gender()
         else:
             return gender
@@ -387,7 +399,7 @@ class Views():
         rank = input(prompt)
         return rank
 
-    def player_creation_confirmation(self,player):
+    def player_creation_confirmation(self, player):
         print("Vous vous appretez a créer le joueur suivant:\n")
         print(player)
 
@@ -397,43 +409,45 @@ class Views():
         family_name = player_dict["family_name"]
         print(f"Le joueur {first_name} {family_name} a été sauvegardé a l'index {player_index} \n")
 
-    def translate_gender(self,gender):
+    def translate_gender(self, gender):
         if gender == "Male":
             return "Homme"
         elif gender == "Female":
             return "Femme"
 
-    def turn_player_dict_into_string(self,player_dict):
+    def turn_player_dict_into_string(self, player_dict):
         first_name = player_dict["first_name"]
         family_name = player_dict["family_name"]
         birthdate = player_dict["birth_date"]
         gender = self.translate_gender(player_dict["gender"])
         rank = player_dict["rank"]
         index = player_dict.doc_id
-        player_string = (f"Nom: {family_name}, Prenom: {first_name}, "
-                        f"Date de naissance: {birthdate}, Genre: {gender}, "
-                        f"Rang: {rank}, Index: {index}.")
+        player_string = (
+            f"Nom: {family_name}, Prenom: {first_name}, "
+            f"Date de naissance: {birthdate}, Genre: {gender}, "
+            f"Rang: {rank}, Index: {index}."
+            )
         return player_string
 
-    def display_playerlist_database(self,player_list, alphabetic=True):
-        if alphabetic == True:
+    def display_playerlist_database(self, player_list, alphabetic=True):
+        if alphabetic is True:
             print("Liste des joueurs dans l'ordre alphabétique:\n")
-        elif alphabetic == False:
+        elif alphabetic is False:
             print("liste des joueurs par rangs:\n")
         for player in player_list:
             print(self.turn_player_dict_into_string(player))
 
-    def tournament_date_display(self,tournament_dates):
+    def tournament_date_display(self, tournament_dates):
         if len(tournament_dates) == 1:
             return tournament_dates[0]
         elif len(tournament_dates) > 1:
             display_string = f"du {tournament_dates[0]} au {tournament_dates[-1]}"
             return display_string
 
-    def display_tournament_list(self,tournament_list,ongoing=True):
-        if ongoing == True:
+    def display_tournament_list(self, tournament_list, ongoing=True):
+        if ongoing is True:
             print("Liste des Tournois en cours:\n")
-        elif ongoing == False:
+        elif ongoing is False:
             print("Liste des Tournois terminés:\n")
         for tournament in tournament_list:
             tournament_name = tournament["tournament_name"]
@@ -442,29 +456,30 @@ class Views():
             tournament_time_control = tournament["time_control"]
             tournament_number_round = tournament["number_of_rounds"]
             tournament_descr = tournament["description"]
-            tournament_string = (f"Nom du tournois: {tournament_name}, Date: {tournament_dates}, "
-                                f"Localisation: {tournament_place}, Contrôle du temps: {tournament_time_control}, "
-                                f"Nombre de rounds: {tournament_number_round}.\n"
-                                f"Index du tournois dans sa base de donnée: {tournament.doc_id}\n"
-                                f"Déscription du tournois: {tournament_descr}\n")
+            tournament_string = (
+                f"Nom du tournois: {tournament_name}, Date: {tournament_dates}, "
+                f"Localisation: {tournament_place}, Contrôle du temps: {tournament_time_control}, "
+                f"Nombre de rounds: {tournament_number_round}.\n"
+                f"Index du tournois dans sa base de donnée: {tournament.doc_id}\n"
+                f"Déscription du tournois: {tournament_descr}\n"
+                )
             print(tournament_string)
-
 
     def select_tournament(self):
         print("Veuillez rentrer l'index du tournois que vous souhaitez modifier.\n")
 
-    def incorrect_tournament_index(self,index):
+    def incorrect_tournament_index(self, index):
         print(
             f"Aucun tourois n'a l'index n°:{index}\n"
             "Veuillez rentrer une nouvelle valeur\n"
         )
 
-    def selected_player_confirmation(self,player_dict):
+    def selected_player_confirmation(self, player_dict):
         print("Vous vous appretez a modifier les données du joueur suivant:\n")
         print(self.turn_player_dict_into_string(player_dict))
-        return self.confirmation()    
+        return self.confirmation()
 
-    def translate_key_for_print(self,value):
+    def translate_key_for_print(self, value):
         if value == "family_name":
             return "le nom de famille"
         elif value == "first_name":
@@ -476,14 +491,14 @@ class Views():
         elif value == "rank":
             return "le rang"
 
-    def change_value_confirmation(self,player_dict,value_to_change,new_value):
+    def change_value_confirmation(self, player_dict, value_to_change, new_value):
         player_name = player_dict["family_name"] + " " + player_dict["first_name"]
         player_old_value = player_dict[value_to_change]
         value_for_display = self.translate_key_for_print(value_to_change)
         print(f"Vous allez changer {value_for_display} de {player_name} de {player_old_value} à {new_value}")
         return self.confirmation()
 
-    def translate_tournament_key_for_print(self,value):
+    def translate_tournament_key_for_print(self, value):
         if value == "tournament_name":
             return "le nom du tournois"
         elif value == "place":
@@ -491,7 +506,7 @@ class Views():
         elif value == "dates":
             return "les dates du tournois"
 
-    def change_value_confirmation_tournament(self,tournament_dict,value_to_change,new_value):
+    def change_value_confirmation_tournament(self, tournament_dict, value_to_change, new_value):
         tournament_name = tournament_dict["tournament_name"]
         player_old_value = tournament_dict[value_to_change]
         value_for_display = self.translate_tournament_key_for_print(value_to_change)
@@ -499,13 +514,13 @@ class Views():
         return self.confirmation()
 
     def change_data_main_selection(self):
-            print(
+        print(
             "\n Que souhaitez vous modifier?"
             "\n1.Un joueur"
             "\n2.Un tournois en cours"
             "\n3.Un tournois fini"
             "\n4.Retourner au menu des données"
-        )
+            )
 
     def change_data_player_value_selection(self):
         print(
@@ -520,7 +535,7 @@ class Views():
 
     def empty_database(self):
         print("La base de donnée est vide.")
-        
+
     def display_report_generator_menu(self):
         print(
             "\n -Générateur de rapports-"
@@ -546,8 +561,10 @@ class Views():
         )
 
     def change_date_warning(self):
-        print("Attention,vous allez remplacer les anciennes dates par une nouvelle liste de dates\n"
-                "les anciennes seront éffacées.\n")
+        print(
+            "Attention,vous allez remplacer les anciennes dates par une nouvelle liste de dates\n"
+            "les anciennes seront éffacées.\n"
+                )
 
     def tournament_report_selector(self):
         print(
@@ -575,7 +592,7 @@ class Views():
             "\n6.Retour au menu des données"
             )
 
-    def display_playerlist_report(self,playerlist_sorted,display_type):
+    def display_playerlist_report(self, playerlist_sorted, display_type):
         if display_type == "alphabetical":
             display_type = "par ordre alphabétique"
         elif display_type == "rank":
@@ -587,14 +604,14 @@ class Views():
             liste += "\n" + str(player) + "\n"
         print(liste)
 
-    def display__ungenerated_round(self,round):
+    def display__ungenerated_round(self, round):
         display = (
             f"\n{round.name}"
             "\nLes pairs du round n'ont pas encore été générées"
         )
         print(display)
 
-    def display_generated_rounds(self,round):
+    def display_generated_rounds(self, round):
         display = (
             f"\n{round.name}"
             "Liste des matchs du round:"
@@ -603,7 +620,7 @@ class Views():
             display += "\n" + str(match)
         print(display)
 
-    def display_started_rounds(self,round):
+    def display_started_rounds(self, round):
         start_time = datetime.fromtimestamp(round.start_time)
         display = (
             f"\n{round.name}"
@@ -614,7 +631,7 @@ class Views():
             display += "\n" + str(match)
         print(display)
 
-    def display_finished_rounds(self,round):
+    def display_finished_rounds(self, round):
         start_time = datetime.fromtimestamp(round.start_time)
         end_time = datetime.fromtimestamp(round.end_time)
         elapsed_time_min = (timedelta(seconds=round.end_time - round.start_time))
@@ -624,13 +641,12 @@ class Views():
             f"\nIl a pris fin le {end_time}"
             f"\nLe round a duré: {elapsed_time_min}"
             "\nListe des matchs du round:"
-            )   
+            )
         for match in round.match_list:
             display += "\n" + str(match)
         print(display)
 
-
-    def display_list_of_rounds_report(self,list_of_rounds):
+    def display_list_of_rounds_report(self, list_of_rounds):
         for round in list_of_rounds:
             if round.status == "Ungenerated":
                 self.display__ungenerated_round(round)
@@ -641,7 +657,7 @@ class Views():
             elif round.status == "Finished":
                 self.display_finished_rounds(round)
 
-    def display_match_list_report(self,list_of_rounds):
+    def display_match_list_report(self, list_of_rounds):
         for round_index in range(len(list_of_rounds)):
             print(f"Liste des matchs du {list_of_rounds[round_index].name}")
             if list_of_rounds[round_index].status == "Ungenerated":
