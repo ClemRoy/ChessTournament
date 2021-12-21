@@ -62,10 +62,6 @@ class Controller:
 
     # Save related function #
 
-    def save_player(self, player):
-        """save a new player at the end of the player database"""
-        self.player_db.insert(player.serialize())
-
     def find_player_correspondance(self, player):
         """take a serialized player,check for correspondance in database and return it's index"""
         matching_player = Query()
@@ -211,6 +207,8 @@ class Controller:
                 return date_list
 
     def set_number_of_round(self):
+        """Ask the user if he want to modify the default number of round
+        and ask return the number of round if the user set it manually"""
         answer = self.view.change_number_of_rounds()
         if answer == "n":
             return 4
@@ -261,6 +259,7 @@ class Controller:
         players = []
         while len(players) < 8:
             self.show_player_index_for_selection()
+            self.view.display_selected_players(players)
             player_index = self.check_player_index_existance()
             if player_index in players:
                 self.view.already_selected_player_error()
@@ -268,7 +267,6 @@ class Controller:
                 pass
             elif player_index not in players:
                 players.append(player_index)
-            self.view.display_selected_players(players)
         return players
 
     def load_players(self, players):
@@ -678,6 +676,7 @@ class Controller:
                 return player
 
     def turn_match_dict_into_match_obj(self, match_dictionnary):
+        """Get a match as a dictionnary and turn it into an object"""
         first_player_index = list(match_dictionnary.keys())[0]
         first_player = self.match_tournament_index_with_player_object(first_player_index)
         second_player_index = list(match_dictionnary.values())[0]
@@ -685,6 +684,8 @@ class Controller:
         return Match(first_player, second_player)
 
     def get_match_dict(self, round_playerlist_index):
+        """verify if players never played together and add them to the list of
+        match for the next round if they never did,then return the list once full"""
         next_matchs_dict = []
         for player_index, _ in enumerate(round_playerlist_index):
             new_match_tmp = self.get_duo_for_first_player(round_playerlist_index[player_index:])
@@ -831,6 +832,7 @@ class Controller:
             return self.data_menu()
 
     def change_data_menu(self):
+        """Menu to select which data the user want to modify"""
         self.view.change_data_main_selection()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):
@@ -903,6 +905,7 @@ class Controller:
             return int(rank)
 
     def create_player_confirmation(self, player):
+        """Ask confirmation before saving new player in DB"""
         self.view.player_creation_confirmation(str(player))
         answer = self.view.confirmation()
         if answer == "y":
@@ -936,12 +939,17 @@ class Controller:
                 self.player_db.upsert(Document(player_dict, doc_id=player_index))
 
     def select_player_for_modification(self):
+        """Show a list of player and their index so the user can chose which one to
+        modify"""
         self.show_player_index_for_selection()
         player = self.check_player_index_existance()
         player = self.player_db.get(doc_id=player)
         return player
 
     def select_player_confirmed(self, rank=False):
+        """display detailled information about player selected for modification,
+        if rank is True it will ask the user to modify the player rank directly,
+        if rank is False it will ask which value the user want to modify"""
         player = self.select_player_for_modification()
         confirmation = self.view.selected_player_confirmation(player)
         if confirmation.lower() == "y":
@@ -953,6 +961,7 @@ class Controller:
             self.data_menu()
 
     def select_input_to_ask(self, value_to_change):
+        """collect the correct input to modify a player value"""
         if value_to_change == "family_name":
             return self.view.ask_for_family_name()
         elif value_to_change == "first_name":
@@ -965,6 +974,8 @@ class Controller:
             return self.ask_for_rank()
 
     def change_player_value(self, player, value_to_change="rank"):
+        """ask confirmation before changing a value on a player,display the player current
+        information,the value to be changed and the new value"""
         new_value = self.select_input_to_ask(value_to_change)
         answer = self.view.change_value_confirmation(player, value_to_change, new_value)
         if answer == "y":
@@ -974,6 +985,7 @@ class Controller:
             self.data_menu()
 
     def select_tournament_for_modification(self, tourament_db_type):
+        """Allow user to select a tournament to modify it's informations"""
         if tourament_db_type == 1:
             self.display_ongoing_tournament_database_chronological()
         elif tourament_db_type == 2:
@@ -1023,6 +1035,7 @@ class Controller:
             return self.tournament_modification_menu(tournament)
 
     def select_input_to_ask_tournament(self, value_to_change):
+        """collect new value for the tournament to modify"""
         if value_to_change == "tournament_name":
             return self.view.ask_for_tournament_name()
         elif value_to_change == "place":
@@ -1032,6 +1045,8 @@ class Controller:
             return self.ask_for_dates()
 
     def change_tournament_value_value(self, tournament, value_to_change, tourament_db_type):
+        """ask user confirmation before modifying a tournaments value and saving it,
+        display selected tournament current info,value to be modified and new value"""
         new_value = self.select_input_to_ask_tournament(value_to_change)
         answer = self.view.change_value_confirmation_tournament(tournament, value_to_change, new_value)
         if answer == "y":
@@ -1044,6 +1059,7 @@ class Controller:
             self.data_menu()
 
     def report_generator_menu(self):
+        """Menu to select report to generate"""
         self.view.display_report_generator_menu()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):
@@ -1060,6 +1076,7 @@ class Controller:
             return self.report_generator_menu()
 
     def report_generator_players(self):
+        """ask for the way to display playerdatabase"""
         self.view.player_report_selector()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):
@@ -1112,6 +1129,7 @@ class Controller:
             self.view.display_tournament_list(finished_tournament_list, ongoing=False)
 
     def report_generator_tournament(self):
+        """Allow user to select which type of tournament report he want"""
         self.view.tournament_report_selector()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):
@@ -1130,6 +1148,7 @@ class Controller:
             return self.report_generator_players()
 
     def report_generator_tournament_advanced(self):
+        """allow user to select a particular tournament to generate a report about it"""
         self.view.tournament_report_db_selector()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):
@@ -1144,7 +1163,7 @@ class Controller:
             return self.report_generator_tournament_advanced()
 
     def advanced_report_tournament_selection(self, tournament_db_type):
-        print("i'm here")
+        """Ask user to select in which database the tournament he want a report on is"""
         if tournament_db_type == 1:
             self.display_ongoing_tournament_database_chronological()
         elif tournament_db_type == 2:
@@ -1157,6 +1176,7 @@ class Controller:
         self.avanced_report_selection(tournament_to_report)
 
     def avanced_report_selection(self, tournament):
+        """Ask user for what report he want on a particular tournament"""
         self.view.advanced_report_selection()
         answer = self.view.ask_for_input()
         if self.check_input_type(answer):

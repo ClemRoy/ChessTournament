@@ -1,7 +1,7 @@
 # coding:utf-8
 
-from controller.controller import Controller
 from view.views import Views
+from controller.controller import Controller
 
 
 def main():
