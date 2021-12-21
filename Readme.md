@@ -33,7 +33,7 @@
 
 ## Features
  Liste des features
- - Ajouter un Joueur a la base de donnée.
+ - Ajouter un Joueur à la base de donnée.
  - Créer un Tournois.
  - Générer les matchs d'un tournois selon le système suisse.
  - Sauvegarder et charger un tournois a n'importe quelle étape.
@@ -52,16 +52,16 @@
 
 ## Usage
 
- Après vous êtres assuré que les packages nécessaire sont installés,vous pouvez lancer le script en tappant 'main.py" dans votre terminal.
+ Après vous êtres assuré que les packages nécessaire sont installés,vous pouvez lancer le script en tappant 'main.py".
 
- Le programme affichera le menu principal,ce dernier,comme tout les menus du programmes sont navigables en rentrant un chiffre correspondant a l'option désirée dans le menu.Il vous sera parfois demandé de confirmé une action par les lettres Y pour oui ou N pour non.
+ Le programme affichera le menu principal,ce dernier,comme tout les menus du programmes sont navigables en rentrant un chiffre correspondant à l'option désirée dans le menu.Il vous sera parfois demandé de confirmer une action par les lettres Y pour oui ou N pour non.
 
- Vous pourrez ajouter des joueurs a la base de donnée a partir du menu intéragir avec les données.Il vous faudra au moins 8 joueurs présent dans la base de données pour pouvoir créer un tournois.
- A partir du menu principal l'utilisateur peut choisir l'option créer un tournois,ce qui lui demandera de fournir les informations nécessaires a la création du tournois.Après confirmation ce dernier sera sauvegardé dans la base de donnée des tournois en cours.
+ Vous pourrez ajouter des joueurs à la base de donnée à partir du menu intéragir avec les données.Il vous faudra au moins 8 joueurs présent dans la base de données pour pouvoir créer un tournois.
+ A partir du menu principal l'utilisateur peut choisir l'option créer un tournois,ce qui lui demandera de fournir les informations nécessaires à la création du tournois.Après confirmation ce dernier sera sauvegardé dans la base de donnée des tournois en cours.
 
  Quand un tournois est présent dans la base de donnée des tournois en cours,l'utilisateur peut choisir la première option du menu principal pour charger le tournois désiré,a partir de là il aura accès au menu du tournois en cours.
 
- Ce dernier permet d'afficher divers information sur le tournois ainsi que d'accéder au round en cours.Depuis le menu du round,l'utilisateur doit d'abord choisir l'option préparer les pairs pour le round de manière a créer la liste des matchs.Il peut accéder a cette dernière a tout moment depuis le menu du round.
+ Ce dernier permet d'afficher divers information sur le tournois ainsi que d'accéder au round en cours.Depuis le menu du round,l'utilisateur doit d'abord choisir l'option préparer les pairs pour le round de manière a créer la liste des matchs.Il peut accéder a cette dernière à tout moment depuis le menu du round.
  Une fois les pairs générés l'utilisateur peut lancer le round a sa discrétion,ce qui démarera le chronomètre.
  Enfin une fois le round fini l'utilisateur doit marquer le round comme fini avant d'enregistrer le résultat des matchs.
  Une fois un round fini et les résultats rentrés l'utilisateur est automatiquement redirigé vers le menu du round suivant.
@@ -72,9 +72,7 @@
  -Générer divers rapports sur les joueurs ou les tournois sauvegardés.
 
  Vous pouvez a tout moment générer un nouveau rapport Flake8 grâce a la commande:
- """
   flake8 "Path_to_file" --max-line-length=119 --exclude=env/ --format=html --htmldir=flake8_rapport 
-  """
 
 
 ## Project Status
